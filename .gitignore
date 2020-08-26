@@ -30,6 +30,7 @@ temp/
 !*.mk
 !*.Dockerfile
 !Doxyfile
+!*.tla
 
 _install
 docs
