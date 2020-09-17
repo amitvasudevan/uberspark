@@ -1,35 +1,36 @@
 ---- MODULE MC ----
 EXTENDS toy, TLC
 
-\* CONSTANT definitions @modelParameterConstants:0MAXUOBJDEVMMIO
-const_159837327988679000 == 
+\* CONSTANT definitions @modelParameterConstants:0MAXUOBJCOLLECTIONS
+const_160035903345520000 == 
 8
 ----
 
 \* CONSTANT definitions @modelParameterConstants:1MAXCPUS
-const_159837327988680000 == 
+const_160035903345521000 == 
 8
 ----
 
-\* CONSTANT definitions @modelParameterConstants:2MAXUOBJCOLLECTIONS
-const_159837327988681000 == 
+\* CONSTANT definitions @modelParameterConstants:3MAXUOBJSWITHINCOLLECTION
+const_160035903345522000 == 
 8
 ----
 
-\* CONSTANT definitions @modelParameterConstants:3MAXUOBJCOLLECTIONSTACKSIZE
-const_159837327988682000 == 
-4096
+\* CONSTANT definitions @modelParameterConstants:4MAXUOBJCOLLECTIONSTACKSIZE
+const_160035903345523000 == 
+16
 ----
 
-\* CONSTANT definitions @modelParameterConstants:4MAXUOBJSWITHINCOLLECTION
-const_159837327988683000 == 
+\* CONSTANT definitions @modelParameterConstants:5MAXUOBJDEVMMIO
+const_160035903345524000 == 
 8
 ----
 
-\* INVARIANT definition @modelCorrectnessInvariants:0
-inv_159837327988784000 ==
-cpus # 0
+\* CONSTANT definitions @modelParameterConstants:6func_set
+const_160035903345525000 == 
+{1,2,3}
 ----
+
 =============================================================================
 \* Modification History
-\* Created Tue Aug 25 09:34:39 PDT 2020 by mjmccall
+\* Created Thu Sep 17 09:10:33 PDT 2020 by mjmccall
