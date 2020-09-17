@@ -6,6 +6,7 @@
 #define MAXUOBJCOLLECTIONSTACKSIZE 4096
 #define MAXUOBJDEVMMIO 8
 
+
 // types/records for cpu and memory
 //note: device end points are either part of memory or cpu
 Struct {
@@ -166,8 +167,17 @@ Uobject_code_legacy_func(x,y,z):
 	8. Cpu[x].pc = memory.memuobjcollection[y].uobject_sssa[x].pc
 
 	
-	
-	
+//added 9/1/2020
+//device execution processes
+device_process(x):  where x is 1 to MAXUOBJDEVMMIO-1
+	1. do
+		a. read from memory.memuobjcollection[(1..MAXUOBJCOLLECTIONS)].memuobj[(1..MAXUOBJSWITHINCOLLECTION)].uobj_dmadata[]
+		b. or
+		c. write to memory.memuobjcollection[(1..MAXUOBJCOLLECTIONS)].memuobj[(1..MAXUOBJSWITHINCOLLECTION)].uobj_dmadata[]
+		d. or
+		e. halt
+	2. while (true)
+
 	
 
 Notes
@@ -177,3 +187,21 @@ Notes
 	3. We need to come up with memory safety, memory integrity and control-flow integrity description based 
        on this model semantics and prove them
 	4. Then we use frama-c to discharge invariants that the model relies upon
+	5. invariants can be discharged via:
+		i. 		assumption on hardware (PAH) 
+		ii. 	assumption on another uobject (PAU)
+		iii. 	obligations on uobject (POU)
+
+//added 9/1/2020
+device/DMA Notes
+	1. the definition of device_process(x) above assumes that the read and write statements within can be 
+		discharged via PAH, PAU and/or POU
+		ii. for example on intel x86 platforms there is vt-d dma page tables that can be setup to enforce such read
+			and write invariants. the page tables become part of a special dma uobject that ensures the appropriate
+			mappings
+		iii. another example arm platform like rpi3, there is a dma controller device that can be setup with dma
+			 control blocks to read/write to memory. so in this case there is a dma uobj that has exclusive control of
+			 the dma controller device endpoint and is able to check the control blocks to ensure that they only
+			 point to uobj_dmadata[] regions
+
+
