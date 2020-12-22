@@ -41,7 +41,8 @@
 #define LEGACY_LINEAR_ADDR_SIZE 0x1F000000
 
 
-
+//current CPU privilege level register
+u32 cpu_cpl;
 
 
 struct {
@@ -117,8 +118,8 @@ tlb_lookup(addr, cpl, tlb_op_mask){
 }
 
 
-cpu_read(u32 addr){
-    (status, paddr) = tlb_lookup(addr, TLB_OP_READ); //returns true if successful lookup 
+cpu_read(u32 addr, u32 cpl){
+    (status, paddr) = tlb_lookup(addr, cpl, TLB_OP_READ); //returns true if successful lookup 
 
     if(status)
         tmp = memory_load(paddr);
@@ -126,9 +127,9 @@ cpu_read(u32 addr){
         cpu_halt(); //error in lookup
 }
 
-cpu_write(u32 addr){
+cpu_write(u32 addr, u32 cpl){
 
-    (status, paddr) = tlb_lookup(addr, TLB_OP_WRITE); //returns true if successful lookup 
+    (status, paddr) = tlb_lookup(addr, cpl, TLB_OP_WRITE); //returns true if successful lookup 
 
     if(status){
         tmp = nondet_u8();
@@ -137,10 +138,10 @@ cpu_write(u32 addr){
         cpu_halt(); //error in lookup
 }
 
-cpu_execute(u32 addr){
+cpu_execute(u32 addr, u32 cpl){
     type= tlb_type(addr);    //returns tlb type for addr
     
-    (status, paddr) = tlb_lookup(addr, TLB_OP_EXECUTE); //returns true if successful lookup 
+    (status, paddr) = tlb_lookup(addr, cpl, TLB_OP_EXECUTE); //returns true if successful lookup 
 
     if(status)
         if(type == TLB_TYPE_SENTINEL)
@@ -153,20 +154,21 @@ cpu_execute(u32 addr){
 
 
 legacy_code () {
-    
+    cpu_cpl = PRIVILEGE_LEVEL_LEGACY;
+
     while(true){
         switch(nondet_u32() mod 4){
             case 0:
                 addr = nondet_u32();
-                cpu_read(addr);
+                cpu_read(addr, cpl);
                 break;
             case 1:
                 addr = nondet_u32();
-                cpu_write(addr);
+                cpu_write(addr, cpl);
                 break;
             case 2:
                 addr = nondet_u32();
-                cpu_execute(addr);
+                cpu_execute(addr, cpl);
                 break;
             case 3:
                 cpu_halt();
