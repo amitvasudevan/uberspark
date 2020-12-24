@@ -1,12 +1,15 @@
 -------------------------------- MODULE toy --------------------------------
 EXTENDS TLC, Sequences, Integers
 CONSTANTS MAXCPUS, MAXUOBJCOLLECTIONS, MAXUOBJSWITHINCOLLECTION, MAXUOBJCOLLECTIONSTACKSIZE, MAXUOBJDEVMMIO,
-            func_set
+            func_set, maxvars
 E(n) == IF n \in MAXCPUS THEN TRUE ELSE FALSE
 R(n) == 1..n
+LocalSets == SUBSET {1,2,3,4,5,6,7,8}\*1..maxvars
 
 (* --algorithm execution
 variables cpu = MAXCPUS,
+          collection = 1,
+          object = 1,
     (**)Cpu = [l \in 1..MAXCPUS |->
               [id |-> l,
                Pc |-> 1,
@@ -20,16 +23,47 @@ variables cpu = MAXCPUS,
     memory = [Mem_legacy |-> {},
               memuobjcollection |-> [c \in 1..MAXUOBJCOLLECTIONS |->
                 [Uobject_stack |-> [s \in (1..MAXCPUS) \X (1..MAXUOBJCOLLECTIONSTACKSIZE) |-> {}],
-                 memuobjs |-> [o \in 1..MAXUOBJSWITHINCOLLECTION |->
-                   [Uobj_ssa : 1..MAXCPUS,
+                 memuobjs |-> [o \in 1..MAXUOBJSWITHINCOLLECTION |-> [Local : LocalSets]
+                   (*[Uobj_ssa : {[ssa \in 1..MAXCPUS |-> {}]},
                     Uobj_code : {},
                     Uobj_data : {},
                     Uobj_dmadata : {},
-                    Uobj_devmmio : 1..MAXUOBJDEVMMIO]
+                    Uobj_devmmio : [dev \in 1..MAXUOBJDEVMMIO |-> {}],
+                    Global : <<>>,
+                    Local : LocalSets,
+                    Device : <<>>,
+                    System : <<>>]*)
                   ]
                 ]
                ]
              ];
+             
+    (*mem_stacks = [Globals |-> {},
+                  ]*)
+    
+    (*mem_test = [memuobjcollection |-> [c \in 1..MAXUOBJCOLLECTIONS |->
+                [memuobjs |-> [o \in 1..MAXUOBJSWITHINCOLLECTION |->
+                   [exists |-> [v \in 1..maxvars |-> {0,1}],
+                   numvars |-> 0..maxvars,
+                   vars |-> << c*100 + o, 0..(0..maxvars)>>]
+                  ]
+                ]
+               ]
+             ];*)
+             
+procedure Push_locals(S) begin
+Start:
+    \*memory.memuobjcollection := memory.memuobjcollection;
+    memory.memuobjcollection[collection].memuobjs[object].Local := Append(memory.memuobjcollection[collection].memuobjs[object].Local, S);
+    return;
+end procedure;
+
+procedure Pop_locals() begin
+Start:
+    \*memory := memory;
+    memory.memuobjcollection[collection].memuobjs[object].Local := Head(memory.memuobjcollection[collection].memuobjs[object].Local);
+    return;
+end procedure;             
              
 procedure Cpu_process(x) begin
 Start:
@@ -86,6 +120,8 @@ procedure Uobject_code(x, y, z)
         In_uobj = FALSE,
         Uobj_finished = FALSE; 
     begin
+\*Push:
+\*    call Push_locals(<<>>);
 Start:
     if ~In_uobj then
 Loop:
@@ -116,6 +152,8 @@ Loop:
             end either;
         end while;
     end if;
+\*Pop:
+\*    call Pop_locals();
 Uobj_finished_assign:
     Uobj_finished := FALSE;
     In_uobj := FALSE;
@@ -165,7 +203,7 @@ Cfunc_finished_assign:
 Cpu_assign: 
     Cpu[x].Sp := 0;\*sp_pre_cfunc_code;
 \*End:
-    \*return;
+    \*return;   TODO
 end procedure;
 
 procedure Uobject_code_casm_func(x, y, z)
@@ -249,53 +287,57 @@ Dec:
 end while;
 
 end algorithm *)
-\* BEGIN TRANSLATION - the hash of the PCal code: PCal-98140ab9e2fee440cbf2cdb55900be38
-\* Label Start of procedure Cpu_process at line 36 col 5 changed to Start_
-\* Label Start of procedure Legacy_code at line 50 col 5 changed to Start_L
-\* Label Start of procedure Uobjcollection_code at line 73 col 5 changed to Start_U
-\* Label Cpu_assign of procedure Uobjcollection_code at line 77 col 5 changed to Cpu_assign_
-\* Label Start of procedure Uobject_code at line 90 col 5 changed to Start_Uo
-\* Label Loop of procedure Uobject_code at line 92 col 9 changed to Loop_
-\* Label Cpu_assign of procedure Uobject_code at line 124 col 5 changed to Cpu_assign_U
-\* Label Start of procedure Uobject_code_c_func at line 132 col 5 changed to Start_Uob
-\* Label Loop of procedure Uobject_code_c_func at line 134 col 9 changed to Loop_U
-\* Label Cpu_assign of procedure Uobject_code_c_func at line 166 col 5 changed to Cpu_assign_Uo
-\* Label Start of procedure Uobject_code_casm_func at line 175 col 5 changed to Start_Uobj
-\* Label Loop of procedure Uobject_code_casm_func at line 177 col 9 changed to Loop_Uo
-\* Label Cpu_assign of procedure Uobject_code_casm_func at line 207 col 9 changed to Cpu_assign_Uob
-\* Label Loop of procedure device_process at line 232 col 5 changed to Loop_d
-\* Procedure Uobject_code_c_func at line 128 col 1 changed to Uobject_code_c_func_
-\* Procedure Uobject_code_casm_func at line 171 col 1 changed to Uobject_code_casm_func_
-\* Procedure Uobject_code_legacy_func at line 213 col 1 changed to Uobject_code_legacy_func_
-\* Parameter x of procedure Cpu_process at line 34 col 23 changed to x_
-\* Parameter x of procedure Legacy_code at line 48 col 23 changed to x_L
-\* Parameter x of procedure Uobjcollection_code at line 71 col 31 changed to x_U
-\* Parameter y of procedure Uobjcollection_code at line 71 col 34 changed to y_
-\* Parameter x of procedure Uobject_code at line 81 col 24 changed to x_Uo
-\* Parameter y of procedure Uobject_code at line 81 col 27 changed to y_U
-\* Parameter z of procedure Uobject_code at line 81 col 30 changed to z_
-\* Parameter x of procedure Uobject_code_c_func at line 128 col 31 changed to x_Uob
-\* Parameter y of procedure Uobject_code_c_func at line 128 col 34 changed to y_Uo
-\* Parameter z of procedure Uobject_code_c_func at line 128 col 37 changed to z_U
-\* Parameter x of procedure Uobject_code_casm_func at line 171 col 34 changed to x_Uobj
-\* Parameter y of procedure Uobject_code_casm_func at line 171 col 37 changed to y_Uob
-\* Parameter z of procedure Uobject_code_casm_func at line 171 col 40 changed to z_Uo
-\* Parameter x of procedure Uobject_code_legacy_func at line 213 col 36 changed to x_Uobje
+\* BEGIN TRANSLATION - the hash of the PCal code: PCal-15ad41b5be0d90f5dc1d55593c1b1181
+\* Label Start of procedure Push_locals at line 57 col 5 changed to Start_
+\* Label Start of procedure Pop_locals at line 64 col 5 changed to Start_P
+\* Label Start of procedure Cpu_process at line 70 col 5 changed to Start_C
+\* Label Start of procedure Legacy_code at line 84 col 5 changed to Start_L
+\* Label Start of procedure Uobjcollection_code at line 107 col 5 changed to Start_U
+\* Label Cpu_assign of procedure Uobjcollection_code at line 111 col 5 changed to Cpu_assign_
+\* Label Start of procedure Uobject_code at line 126 col 5 changed to Start_Uo
+\* Label Loop of procedure Uobject_code at line 128 col 9 changed to Loop_
+\* Label Cpu_assign of procedure Uobject_code at line 162 col 5 changed to Cpu_assign_U
+\* Label Start of procedure Uobject_code_c_func at line 170 col 5 changed to Start_Uob
+\* Label Loop of procedure Uobject_code_c_func at line 172 col 9 changed to Loop_U
+\* Label Cpu_assign of procedure Uobject_code_c_func at line 204 col 5 changed to Cpu_assign_Uo
+\* Label Start of procedure Uobject_code_casm_func at line 213 col 5 changed to Start_Uobj
+\* Label Loop of procedure Uobject_code_casm_func at line 215 col 9 changed to Loop_Uo
+\* Label Cpu_assign of procedure Uobject_code_casm_func at line 245 col 9 changed to Cpu_assign_Uob
+\* Label Loop of procedure device_process at line 270 col 5 changed to Loop_d
+\* Procedure Uobject_code_c_func at line 166 col 1 changed to Uobject_code_c_func_
+\* Procedure Uobject_code_casm_func at line 209 col 1 changed to Uobject_code_casm_func_
+\* Procedure Uobject_code_legacy_func at line 251 col 1 changed to Uobject_code_legacy_func_
+\* Parameter x of procedure Cpu_process at line 68 col 23 changed to x_
+\* Parameter x of procedure Legacy_code at line 82 col 23 changed to x_L
+\* Parameter x of procedure Uobjcollection_code at line 105 col 31 changed to x_U
+\* Parameter y of procedure Uobjcollection_code at line 105 col 34 changed to y_
+\* Parameter x of procedure Uobject_code at line 115 col 24 changed to x_Uo
+\* Parameter y of procedure Uobject_code at line 115 col 27 changed to y_U
+\* Parameter z of procedure Uobject_code at line 115 col 30 changed to z_
+\* Parameter x of procedure Uobject_code_c_func at line 166 col 31 changed to x_Uob
+\* Parameter y of procedure Uobject_code_c_func at line 166 col 34 changed to y_Uo
+\* Parameter z of procedure Uobject_code_c_func at line 166 col 37 changed to z_U
+\* Parameter x of procedure Uobject_code_casm_func at line 209 col 34 changed to x_Uobj
+\* Parameter y of procedure Uobject_code_casm_func at line 209 col 37 changed to y_Uob
+\* Parameter z of procedure Uobject_code_casm_func at line 209 col 40 changed to z_Uo
+\* Parameter x of procedure Uobject_code_legacy_func at line 251 col 36 changed to x_Uobje
 CONSTANT defaultInitValue
-VARIABLES cpu, Cpu, memory, pc, stack, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-          Uobject_code_c_func, Uobject_code_casm_func, 
+VARIABLES cpu, collection, object, Cpu, memory, pc, stack, S, x_, x_L, x_U, 
+          y_, x_Uo, y_U, z_, Uobject_code_c_func, Uobject_code_casm_func, 
           Uobject_code_legacy_func, Uobjects, In_uobj, Uobj_finished, x_Uob, 
           y_Uo, z_U, cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
           casmfunc_finished, in_casmfunc, x_Uobje, y, z, x
 
-vars == << cpu, Cpu, memory, pc, stack, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-           Uobject_code_c_func, Uobject_code_casm_func, 
+vars == << cpu, collection, object, Cpu, memory, pc, stack, S, x_, x_L, x_U, 
+           y_, x_Uo, y_U, z_, Uobject_code_c_func, Uobject_code_casm_func, 
            Uobject_code_legacy_func, Uobjects, In_uobj, Uobj_finished, x_Uob, 
            y_Uo, z_U, cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
            casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
 
 Init == (* Global variables *)
         /\ cpu = MAXCPUS
+        /\ collection = 1
+        /\ object = 1
         /\ Cpu =     [l \in 1..MAXCPUS |->
                      [id |-> l,
                       Pc |-> 1,
@@ -308,16 +350,22 @@ Init == (* Global variables *)
         /\ memory = [Mem_legacy |-> {},
                      memuobjcollection |-> [c \in 1..MAXUOBJCOLLECTIONS |->
                        [Uobject_stack |-> [s \in (1..MAXCPUS) \X (1..MAXUOBJCOLLECTIONSTACKSIZE) |-> {}],
-                        memuobjs |-> [o \in 1..MAXUOBJSWITHINCOLLECTION |->
-                          [Uobj_ssa : 1..MAXCPUS,
-                           Uobj_code : {},
-                           Uobj_data : {},
-                           Uobj_dmadata : {},
-                           Uobj_devmmio : 1..MAXUOBJDEVMMIO]
+                        memuobjs |-> [o \in 1..MAXUOBJSWITHINCOLLECTION |-> [Local : LocalSets]
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
                          ]
                        ]
                       ]
                     ]
+        (* Procedure Push_locals *)
+        /\ S = defaultInitValue
         (* Procedure Cpu_process *)
         /\ x_ = defaultInitValue
         (* Procedure Legacy_code *)
@@ -357,44 +405,71 @@ Init == (* Global variables *)
         /\ pc = "Loop"
 
 Start_ == /\ pc = "Start_"
-          /\ \/ /\ /\ stack' = << [ procedure |->  "Legacy_code",
-                                    pc        |->  Head(stack).pc,
-                                    x_L       |->  x_L ] >>
-                                \o Tail(stack)
-                   /\ x_L' = x_
-                /\ pc' = "Start_L"
-                /\ UNCHANGED <<x_U, y_>>
-             \/ /\ \E obj \in 1..MAXUOBJCOLLECTIONS:
-                     /\ /\ stack' = << [ procedure |->  "Uobjcollection_code",
-                                         pc        |->  "After_branching",
-                                         x_U       |->  x_U,
-                                         y_        |->  y_ ] >>
-                                     \o stack
-                        /\ x_U' = x_
-                        /\ y_' = obj
-                     /\ pc' = "Start_U"
-                /\ x_L' = x_L
-          /\ UNCHANGED << cpu, Cpu, memory, x_, x_Uo, y_U, z_, 
-                          Uobject_code_c_func, Uobject_code_casm_func, 
+          /\ memory' = [memory EXCEPT !.memuobjcollection[collection].memuobjs[object].Local = Append(memory.memuobjcollection[collection].memuobjs[object].Local, S)]
+          /\ pc' = Head(stack).pc
+          /\ S' = Head(stack).S
+          /\ stack' = Tail(stack)
+          /\ UNCHANGED << cpu, collection, object, Cpu, x_, x_L, x_U, y_, x_Uo, 
+                          y_U, z_, Uobject_code_c_func, Uobject_code_casm_func, 
                           Uobject_code_legacy_func, Uobjects, In_uobj, 
                           Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
                           in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
                           in_casmfunc, x_Uobje, y, z, x >>
 
+Push_locals == Start_
+
+Start_P == /\ pc = "Start_P"
+           /\ memory' = [memory EXCEPT !.memuobjcollection[collection].memuobjs[object].Local = Head(memory.memuobjcollection[collection].memuobjs[object].Local)]
+           /\ pc' = Head(stack).pc
+           /\ stack' = Tail(stack)
+           /\ UNCHANGED << cpu, collection, object, Cpu, S, x_, x_L, x_U, y_, 
+                           x_Uo, y_U, z_, Uobject_code_c_func, 
+                           Uobject_code_casm_func, Uobject_code_legacy_func, 
+                           Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                           cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                           casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
+
+Pop_locals == Start_P
+
+Start_C == /\ pc = "Start_C"
+           /\ \/ /\ /\ stack' = << [ procedure |->  "Legacy_code",
+                                     pc        |->  Head(stack).pc,
+                                     x_L       |->  x_L ] >>
+                                 \o Tail(stack)
+                    /\ x_L' = x_
+                 /\ pc' = "Start_L"
+                 /\ UNCHANGED <<x_U, y_>>
+              \/ /\ \E obj \in 1..MAXUOBJCOLLECTIONS:
+                      /\ /\ stack' = << [ procedure |->  "Uobjcollection_code",
+                                          pc        |->  "After_branching",
+                                          x_U       |->  x_U,
+                                          y_        |->  y_ ] >>
+                                      \o stack
+                         /\ x_U' = x_
+                         /\ y_' = obj
+                      /\ pc' = "Start_U"
+                 /\ x_L' = x_L
+           /\ UNCHANGED << cpu, collection, object, Cpu, memory, S, x_, x_Uo, 
+                           y_U, z_, Uobject_code_c_func, 
+                           Uobject_code_casm_func, Uobject_code_legacy_func, 
+                           Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                           cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                           casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
+
 After_branching == /\ pc = "After_branching"
                    /\ pc' = Head(stack).pc
                    /\ x_' = Head(stack).x_
                    /\ stack' = Tail(stack)
-                   /\ UNCHANGED << cpu, Cpu, memory, x_L, x_U, y_, x_Uo, y_U, 
-                                   z_, Uobject_code_c_func, 
-                                   Uobject_code_casm_func, 
+                   /\ UNCHANGED << cpu, collection, object, Cpu, memory, S, 
+                                   x_L, x_U, y_, x_Uo, y_U, z_, 
+                                   Uobject_code_c_func, Uobject_code_casm_func, 
                                    Uobject_code_legacy_func, Uobjects, In_uobj, 
                                    Uobj_finished, x_Uob, y_Uo, z_U, 
                                    cfunc_finished, in_cfunc, x_Uobj, y_Uob, 
                                    z_Uo, casmfunc_finished, in_casmfunc, 
                                    x_Uobje, y, z, x >>
 
-Cpu_process == Start_ \/ After_branching
+Cpu_process == Start_C \/ After_branching
 
 Start_L == /\ pc = "Start_L"
            /\ \/ /\ /\ stack' = << [ procedure |->  "Uobjcollection_code",
@@ -422,12 +497,12 @@ Start_L == /\ pc = "Start_L"
                  /\ x_L' = Head(stack).x_L
                  /\ stack' = Tail(stack)
                  /\ UNCHANGED <<x_U, y_>>
-           /\ UNCHANGED << cpu, Cpu, memory, x_, x_Uo, y_U, z_, 
-                           Uobject_code_c_func, Uobject_code_casm_func, 
-                           Uobject_code_legacy_func, Uobjects, In_uobj, 
-                           Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
-                           in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
-                           in_casmfunc, x_Uobje, y, z, x >>
+           /\ UNCHANGED << cpu, collection, object, Cpu, memory, S, x_, x_Uo, 
+                           y_U, z_, Uobject_code_c_func, 
+                           Uobject_code_casm_func, Uobject_code_legacy_func, 
+                           Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                           cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                           casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
 
 Legacy_code == Start_L
 
@@ -454,19 +529,20 @@ Start_U == /\ pc = "Start_U"
            /\ In_uobj' = FALSE
            /\ Uobj_finished' = FALSE
            /\ pc' = "Start_Uo"
-           /\ UNCHANGED << cpu, Cpu, memory, x_, x_L, x_U, y_, x_Uob, y_Uo, 
-                           z_U, cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
-                           casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
+           /\ UNCHANGED << cpu, collection, object, Cpu, memory, S, x_, x_L, 
+                           x_U, y_, x_Uob, y_Uo, z_U, cfunc_finished, in_cfunc, 
+                           x_Uobj, y_Uob, z_Uo, casmfunc_finished, in_casmfunc, 
+                           x_Uobje, y, z, x >>
 
 Return == /\ pc = "Return"
           /\ Cpu' = [Cpu EXCEPT ![x_U].Pc = 0]
           /\ pc' = "Cpu_assign_"
-          /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-                          Uobject_code_c_func, Uobject_code_casm_func, 
-                          Uobject_code_legacy_func, Uobjects, In_uobj, 
-                          Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
-                          in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
-                          in_casmfunc, x_Uobje, y, z, x >>
+          /\ UNCHANGED << cpu, collection, object, memory, stack, S, x_, x_L, 
+                          x_U, y_, x_Uo, y_U, z_, Uobject_code_c_func, 
+                          Uobject_code_casm_func, Uobject_code_legacy_func, 
+                          Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                          cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                          casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
 
 Cpu_assign_ == /\ pc = "Cpu_assign_"
                /\ Cpu' = [Cpu EXCEPT ![x_U].Sp = 0]
@@ -474,8 +550,9 @@ Cpu_assign_ == /\ pc = "Cpu_assign_"
                /\ x_U' = Head(stack).x_U
                /\ y_' = Head(stack).y_
                /\ stack' = Tail(stack)
-               /\ UNCHANGED << cpu, memory, x_, x_L, x_Uo, y_U, z_, 
-                               Uobject_code_c_func, Uobject_code_casm_func, 
+               /\ UNCHANGED << cpu, collection, object, memory, S, x_, x_L, 
+                               x_Uo, y_U, z_, Uobject_code_c_func, 
+                               Uobject_code_casm_func, 
                                Uobject_code_legacy_func, Uobjects, In_uobj, 
                                Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
                                in_cfunc, x_Uobj, y_Uob, z_Uo, 
@@ -488,8 +565,8 @@ Start_Uo == /\ pc = "Start_Uo"
             /\ IF ~In_uobj
                   THEN /\ pc' = "Loop_"
                   ELSE /\ pc' = "Uobj_finished_assign"
-            /\ UNCHANGED << cpu, Cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, 
-                            y_U, z_, Uobject_code_c_func, 
+            /\ UNCHANGED << cpu, collection, object, Cpu, memory, stack, S, x_, 
+                            x_L, x_U, y_, x_Uo, y_U, z_, Uobject_code_c_func, 
                             Uobject_code_casm_func, Uobject_code_legacy_func, 
                             Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
                             cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
@@ -517,20 +594,21 @@ Loop_ == /\ pc = "Loop_"
                     /\ pc' = "Loop_"
                ELSE /\ pc' = "Uobj_finished_assign"
                     /\ UNCHANGED << Cpu, Uobj_finished >>
-         /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-                         Uobject_code_c_func, Uobject_code_casm_func, 
-                         Uobject_code_legacy_func, Uobjects, In_uobj, x_Uob, 
-                         y_Uo, z_U, cfunc_finished, in_cfunc, x_Uobj, y_Uob, 
-                         z_Uo, casmfunc_finished, in_casmfunc, x_Uobje, y, z, 
-                         x >>
+         /\ UNCHANGED << cpu, collection, object, memory, stack, S, x_, x_L, 
+                         x_U, y_, x_Uo, y_U, z_, Uobject_code_c_func, 
+                         Uobject_code_casm_func, Uobject_code_legacy_func, 
+                         Uobjects, In_uobj, x_Uob, y_Uo, z_U, cfunc_finished, 
+                         in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
+                         in_casmfunc, x_Uobje, y, z, x >>
 
 Uobj_finished_assign == /\ pc = "Uobj_finished_assign"
                         /\ Uobj_finished' = FALSE
                         /\ In_uobj' = FALSE
                         /\ Cpu' = [Cpu EXCEPT ![x_Uo].Pc = 0]
                         /\ pc' = "Cpu_assign_U"
-                        /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, 
-                                        x_Uo, y_U, z_, Uobject_code_c_func, 
+                        /\ UNCHANGED << cpu, collection, object, memory, stack, 
+                                        S, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
+                                        Uobject_code_c_func, 
                                         Uobject_code_casm_func, 
                                         Uobject_code_legacy_func, Uobjects, 
                                         x_Uob, y_Uo, z_U, cfunc_finished, 
@@ -551,10 +629,11 @@ Cpu_assign_U == /\ pc = "Cpu_assign_U"
                 /\ y_U' = Head(stack).y_U
                 /\ z_' = Head(stack).z_
                 /\ stack' = Tail(stack)
-                /\ UNCHANGED << cpu, memory, x_, x_L, x_U, y_, x_Uob, y_Uo, 
-                                z_U, cfunc_finished, in_cfunc, x_Uobj, y_Uob, 
-                                z_Uo, casmfunc_finished, in_casmfunc, x_Uobje, 
-                                y, z, x >>
+                /\ UNCHANGED << cpu, collection, object, memory, S, x_, x_L, 
+                                x_U, y_, x_Uob, y_Uo, z_U, cfunc_finished, 
+                                in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                                casmfunc_finished, in_casmfunc, x_Uobje, y, z, 
+                                x >>
 
 Uobject_code == Start_Uo \/ Loop_ \/ Uobj_finished_assign \/ Cpu_assign_U
 
@@ -562,13 +641,13 @@ Start_Uob == /\ pc = "Start_Uob"
              /\ IF ~in_cfunc
                    THEN /\ pc' = "Loop_U"
                    ELSE /\ pc' = "Cfunc_finished_assign"
-             /\ UNCHANGED << cpu, Cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, 
-                             y_U, z_, Uobject_code_c_func, 
-                             Uobject_code_casm_func, Uobject_code_legacy_func, 
-                             Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, 
-                             z_U, cfunc_finished, in_cfunc, x_Uobj, y_Uob, 
-                             z_Uo, casmfunc_finished, in_casmfunc, x_Uobje, y, 
-                             z, x >>
+             /\ UNCHANGED << cpu, collection, object, Cpu, memory, stack, S, 
+                             x_, x_L, x_U, y_, x_Uo, y_U, z_, 
+                             Uobject_code_c_func, Uobject_code_casm_func, 
+                             Uobject_code_legacy_func, Uobjects, In_uobj, 
+                             Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
+                             in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
+                             in_casmfunc, x_Uobje, y, z, x >>
 
 Loop_U == /\ pc = "Loop_U"
           /\ IF ~cfunc_finished
@@ -592,20 +671,21 @@ Loop_U == /\ pc = "Loop_U"
                      /\ pc' = "Loop_U"
                 ELSE /\ pc' = "Cfunc_finished_assign"
                      /\ UNCHANGED << Cpu, cfunc_finished >>
-          /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-                          Uobject_code_c_func, Uobject_code_casm_func, 
-                          Uobject_code_legacy_func, Uobjects, In_uobj, 
-                          Uobj_finished, x_Uob, y_Uo, z_U, in_cfunc, x_Uobj, 
-                          y_Uob, z_Uo, casmfunc_finished, in_casmfunc, x_Uobje, 
-                          y, z, x >>
+          /\ UNCHANGED << cpu, collection, object, memory, stack, S, x_, x_L, 
+                          x_U, y_, x_Uo, y_U, z_, Uobject_code_c_func, 
+                          Uobject_code_casm_func, Uobject_code_legacy_func, 
+                          Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                          in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
+                          in_casmfunc, x_Uobje, y, z, x >>
 
 Cfunc_finished_assign == /\ pc = "Cfunc_finished_assign"
                          /\ cfunc_finished' = FALSE
                          /\ in_cfunc' = FALSE
                          /\ Cpu' = [Cpu EXCEPT ![x_Uob].pc = 0]
                          /\ pc' = "Cpu_assign_Uo"
-                         /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, 
-                                         x_Uo, y_U, z_, Uobject_code_c_func, 
+                         /\ UNCHANGED << cpu, collection, object, memory, 
+                                         stack, S, x_, x_L, x_U, y_, x_Uo, y_U, 
+                                         z_, Uobject_code_c_func, 
                                          Uobject_code_casm_func, 
                                          Uobject_code_legacy_func, Uobjects, 
                                          In_uobj, Uobj_finished, x_Uob, y_Uo, 
@@ -616,9 +696,9 @@ Cfunc_finished_assign == /\ pc = "Cfunc_finished_assign"
 Cpu_assign_Uo == /\ pc = "Cpu_assign_Uo"
                  /\ Cpu' = [Cpu EXCEPT ![x_Uob].Sp = 0]
                  /\ pc' = "Error"
-                 /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, 
-                                 y_U, z_, Uobject_code_c_func, 
-                                 Uobject_code_casm_func, 
+                 /\ UNCHANGED << cpu, collection, object, memory, stack, S, x_, 
+                                 x_L, x_U, y_, x_Uo, y_U, z_, 
+                                 Uobject_code_c_func, Uobject_code_casm_func, 
                                  Uobject_code_legacy_func, Uobjects, In_uobj, 
                                  Uobj_finished, x_Uob, y_Uo, z_U, 
                                  cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
@@ -632,13 +712,13 @@ Start_Uobj == /\ pc = "Start_Uobj"
               /\ IF ~in_casmfunc
                     THEN /\ pc' = "Loop_Uo"
                     ELSE /\ pc' = "Error"
-              /\ UNCHANGED << cpu, Cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, 
-                              y_U, z_, Uobject_code_c_func, 
-                              Uobject_code_casm_func, Uobject_code_legacy_func, 
-                              Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, 
-                              z_U, cfunc_finished, in_cfunc, x_Uobj, y_Uob, 
-                              z_Uo, casmfunc_finished, in_casmfunc, x_Uobje, y, 
-                              z, x >>
+              /\ UNCHANGED << cpu, collection, object, Cpu, memory, stack, S, 
+                              x_, x_L, x_U, y_, x_Uo, y_U, z_, 
+                              Uobject_code_c_func, Uobject_code_casm_func, 
+                              Uobject_code_legacy_func, Uobjects, In_uobj, 
+                              Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
+                              in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
+                              in_casmfunc, x_Uobje, y, z, x >>
 
 Loop_Uo == /\ pc = "Loop_Uo"
            /\ IF ~casmfunc_finished
@@ -665,18 +745,19 @@ Loop_Uo == /\ pc = "Loop_Uo"
                       /\ in_casmfunc' = FALSE
                       /\ Cpu' = [Cpu EXCEPT ![x_Uobj].pc = 0]
                       /\ pc' = "Cpu_assign_Uob"
-           /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-                           Uobject_code_c_func, Uobject_code_casm_func, 
-                           Uobject_code_legacy_func, Uobjects, In_uobj, 
-                           Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
-                           in_cfunc, x_Uobj, y_Uob, z_Uo, x_Uobje, y, z, x >>
+           /\ UNCHANGED << cpu, collection, object, memory, stack, S, x_, x_L, 
+                           x_U, y_, x_Uo, y_U, z_, Uobject_code_c_func, 
+                           Uobject_code_casm_func, Uobject_code_legacy_func, 
+                           Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                           cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                           x_Uobje, y, z, x >>
 
 Cpu_assign_Uob == /\ pc = "Cpu_assign_Uob"
                   /\ Cpu' = [Cpu EXCEPT ![x_Uobj].Sp = 0]
                   /\ pc' = "Error"
-                  /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, 
-                                  y_U, z_, Uobject_code_c_func, 
-                                  Uobject_code_casm_func, 
+                  /\ UNCHANGED << cpu, collection, object, memory, stack, S, 
+                                  x_, x_L, x_U, y_, x_Uo, y_U, z_, 
+                                  Uobject_code_c_func, Uobject_code_casm_func, 
                                   Uobject_code_legacy_func, Uobjects, In_uobj, 
                                   Uobj_finished, x_Uob, y_Uo, z_U, 
                                   cfunc_finished, in_cfunc, x_Uobj, y_Uob, 
@@ -688,19 +769,19 @@ Uobject_code_casm_func_ == Start_Uobj \/ Loop_Uo \/ Cpu_assign_Uob
 Start == /\ pc = "Start"
          /\ memory' = [memory EXCEPT !.memuobjcollection[y].uobject_sssa[x_Uobje].sp = Cpu[x_Uobje].sp]
          /\ pc' = "Memory_assign"
-         /\ UNCHANGED << cpu, Cpu, stack, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-                         Uobject_code_c_func, Uobject_code_casm_func, 
-                         Uobject_code_legacy_func, Uobjects, In_uobj, 
-                         Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
-                         in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
-                         in_casmfunc, x_Uobje, y, z, x >>
+         /\ UNCHANGED << cpu, collection, object, Cpu, stack, S, x_, x_L, x_U, 
+                         y_, x_Uo, y_U, z_, Uobject_code_c_func, 
+                         Uobject_code_casm_func, Uobject_code_legacy_func, 
+                         Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                         cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                         casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
 
 Memory_assign == /\ pc = "Memory_assign"
                  /\ memory' = [memory EXCEPT !.memuobjcollection[y].uobject_sssa[x_Uobje].lr = Cpu[x_Uobje].lr]
                  /\ pc' = "Memory_assign_pc"
-                 /\ UNCHANGED << cpu, Cpu, stack, x_, x_L, x_U, y_, x_Uo, y_U, 
-                                 z_, Uobject_code_c_func, 
-                                 Uobject_code_casm_func, 
+                 /\ UNCHANGED << cpu, collection, object, Cpu, stack, S, x_, 
+                                 x_L, x_U, y_, x_Uo, y_U, z_, 
+                                 Uobject_code_c_func, Uobject_code_casm_func, 
                                  Uobject_code_legacy_func, Uobjects, In_uobj, 
                                  Uobj_finished, x_Uob, y_Uo, z_U, 
                                  cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
@@ -711,8 +792,9 @@ Memory_assign_pc == /\ pc = "Memory_assign_pc"
                     /\ memory' = [memory EXCEPT !.memuobjcollection[y].uobject_sssa[x_Uobje].pc = 0]
                     /\ Cpu' = [Cpu EXCEPT ![x_Uobje].Lr = 0]
                     /\ pc' = "Cpu_assign"
-                    /\ UNCHANGED << cpu, stack, x_, x_L, x_U, y_, x_Uo, y_U, 
-                                    z_, Uobject_code_c_func, 
+                    /\ UNCHANGED << cpu, collection, object, stack, S, x_, x_L, 
+                                    x_U, y_, x_Uo, y_U, z_, 
+                                    Uobject_code_c_func, 
                                     Uobject_code_casm_func, 
                                     Uobject_code_legacy_func, Uobjects, 
                                     In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
@@ -723,19 +805,20 @@ Memory_assign_pc == /\ pc = "Memory_assign_pc"
 Cpu_assign == /\ pc = "Cpu_assign"
               /\ Cpu' = [Cpu EXCEPT ![x_Uobje].Pc = 0]
               /\ pc' = "Resumelegacy"
-              /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, y_U, 
-                              z_, Uobject_code_c_func, Uobject_code_casm_func, 
-                              Uobject_code_legacy_func, Uobjects, In_uobj, 
-                              Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
-                              in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
-                              in_casmfunc, x_Uobje, y, z, x >>
+              /\ UNCHANGED << cpu, collection, object, memory, stack, S, x_, 
+                              x_L, x_U, y_, x_Uo, y_U, z_, Uobject_code_c_func, 
+                              Uobject_code_casm_func, Uobject_code_legacy_func, 
+                              Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, 
+                              z_U, cfunc_finished, in_cfunc, x_Uobj, y_Uob, 
+                              z_Uo, casmfunc_finished, in_casmfunc, x_Uobje, y, 
+                              z, x >>
 
 Resumelegacy == /\ pc = "Resumelegacy"
                 /\ Cpu' = [Cpu EXCEPT ![x_Uobje].Sp = memory.memuobjcollection[y].uobject_sssa[x_Uobje].sp]
                 /\ pc' = "Cpu_assign_pc"
-                /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, 
-                                y_U, z_, Uobject_code_c_func, 
-                                Uobject_code_casm_func, 
+                /\ UNCHANGED << cpu, collection, object, memory, stack, S, x_, 
+                                x_L, x_U, y_, x_Uo, y_U, z_, 
+                                Uobject_code_c_func, Uobject_code_casm_func, 
                                 Uobject_code_legacy_func, Uobjects, In_uobj, 
                                 Uobj_finished, x_Uob, y_Uo, z_U, 
                                 cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
@@ -745,9 +828,9 @@ Resumelegacy == /\ pc = "Resumelegacy"
 Cpu_assign_pc == /\ pc = "Cpu_assign_pc"
                  /\ Cpu' = [Cpu EXCEPT ![x_Uobje].Pc = memory.memuobjcollection[y].uobject_sssa[x_Uobje].pc]
                  /\ pc' = "Error"
-                 /\ UNCHANGED << cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, 
-                                 y_U, z_, Uobject_code_c_func, 
-                                 Uobject_code_casm_func, 
+                 /\ UNCHANGED << cpu, collection, object, memory, stack, S, x_, 
+                                 x_L, x_U, y_, x_Uo, y_U, z_, 
+                                 Uobject_code_c_func, Uobject_code_casm_func, 
                                  Uobject_code_legacy_func, Uobjects, In_uobj, 
                                  Uobj_finished, x_Uob, y_Uo, z_U, 
                                  cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
@@ -768,12 +851,12 @@ Loop_d == /\ pc = "Loop_d"
              \/ /\ pc' = Head(stack).pc
                 /\ x' = Head(stack).x
                 /\ stack' = Tail(stack)
-          /\ UNCHANGED << cpu, Cpu, memory, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-                          Uobject_code_c_func, Uobject_code_casm_func, 
-                          Uobject_code_legacy_func, Uobjects, In_uobj, 
-                          Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
-                          in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
-                          in_casmfunc, x_Uobje, y, z >>
+          /\ UNCHANGED << cpu, collection, object, Cpu, memory, S, x_, x_L, 
+                          x_U, y_, x_Uo, y_U, z_, Uobject_code_c_func, 
+                          Uobject_code_casm_func, Uobject_code_legacy_func, 
+                          Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                          cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                          casmfunc_finished, in_casmfunc, x_Uobje, y, z >>
 
 device_process == Loop_d
 
@@ -784,41 +867,42 @@ Loop == /\ pc = "Loop"
                                        x_        |->  x_ ] >>
                                    \o stack
                       /\ x_' = cpu
-                   /\ pc' = "Start_"
+                   /\ pc' = "Start_C"
               ELSE /\ pc' = "Done"
                    /\ UNCHANGED << stack, x_ >>
-        /\ UNCHANGED << cpu, Cpu, memory, x_L, x_U, y_, x_Uo, y_U, z_, 
-                        Uobject_code_c_func, Uobject_code_casm_func, 
-                        Uobject_code_legacy_func, Uobjects, In_uobj, 
-                        Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
-                        in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
-                        in_casmfunc, x_Uobje, y, z, x >>
+        /\ UNCHANGED << cpu, collection, object, Cpu, memory, S, x_L, x_U, y_, 
+                        x_Uo, y_U, z_, Uobject_code_c_func, 
+                        Uobject_code_casm_func, Uobject_code_legacy_func, 
+                        Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                        cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                        casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
 
 Dec == /\ pc = "Dec"
        /\ cpu' = cpu - 1
        /\ pc' = "Loop"
-       /\ UNCHANGED << Cpu, memory, stack, x_, x_L, x_U, y_, x_Uo, y_U, z_, 
-                       Uobject_code_c_func, Uobject_code_casm_func, 
-                       Uobject_code_legacy_func, Uobjects, In_uobj, 
-                       Uobj_finished, x_Uob, y_Uo, z_U, cfunc_finished, 
-                       in_cfunc, x_Uobj, y_Uob, z_Uo, casmfunc_finished, 
-                       in_casmfunc, x_Uobje, y, z, x >>
+       /\ UNCHANGED << collection, object, Cpu, memory, stack, S, x_, x_L, x_U, 
+                       y_, x_Uo, y_U, z_, Uobject_code_c_func, 
+                       Uobject_code_casm_func, Uobject_code_legacy_func, 
+                       Uobjects, In_uobj, Uobj_finished, x_Uob, y_Uo, z_U, 
+                       cfunc_finished, in_cfunc, x_Uobj, y_Uob, z_Uo, 
+                       casmfunc_finished, in_casmfunc, x_Uobje, y, z, x >>
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
 Terminating == pc = "Done" /\ UNCHANGED vars
 
-Next == Cpu_process \/ Legacy_code \/ Uobjcollection_code \/ Uobject_code
-           \/ Uobject_code_c_func_ \/ Uobject_code_casm_func_
-           \/ Uobject_code_legacy_func_ \/ device_process \/ Loop \/ Dec
+Next == Push_locals \/ Pop_locals \/ Cpu_process \/ Legacy_code
+           \/ Uobjcollection_code \/ Uobject_code \/ Uobject_code_c_func_
+           \/ Uobject_code_casm_func_ \/ Uobject_code_legacy_func_
+           \/ device_process \/ Loop \/ Dec
            \/ Terminating
 
 Spec == Init /\ [][Next]_vars
 
 Termination == <>(pc = "Done")
 
-\* END TRANSLATION - the hash of the generated TLA code (remove to silence divergence warnings): TLA-9748b9068f00e69c7f7e2b48a23a0091
+\* END TRANSLATION - the hash of the generated TLA code (remove to silence divergence warnings): TLA-551a3c533e92a9aaeb0f74a5c6f6774f
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Sep 17 09:10:29 PDT 2020 by mjmccall
+\* Last modified Tue Dec 08 10:15:34 PST 2020 by mjmccall
 \* Created Thu Aug 20 05:23:36 PDT 2020 by mjmccall

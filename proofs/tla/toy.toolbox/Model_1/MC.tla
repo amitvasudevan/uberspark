@@ -2,35 +2,48 @@
 EXTENDS toy, TLC
 
 \* CONSTANT definitions @modelParameterConstants:0MAXUOBJCOLLECTIONS
-const_160035903345520000 == 
-8
+const_1608145729980146000 == 
+1
 ----
 
 \* CONSTANT definitions @modelParameterConstants:1MAXCPUS
-const_160035903345521000 == 
+const_1608145729980147000 == 
 8
 ----
 
 \* CONSTANT definitions @modelParameterConstants:3MAXUOBJSWITHINCOLLECTION
-const_160035903345522000 == 
-8
+const_1608145729980148000 == 
+16
 ----
 
 \* CONSTANT definitions @modelParameterConstants:4MAXUOBJCOLLECTIONSTACKSIZE
-const_160035903345523000 == 
+const_1608145729980149000 == 
 16
 ----
 
 \* CONSTANT definitions @modelParameterConstants:5MAXUOBJDEVMMIO
-const_160035903345524000 == 
+const_1608145729980150000 == 
 8
 ----
 
 \* CONSTANT definitions @modelParameterConstants:6func_set
-const_160035903345525000 == 
-{1,2,3}
+const_1608145729980151000 == 
+{}
 ----
 
+\* CONSTANT definitions @modelParameterConstants:7maxvars
+const_1608145729980152000 == 
+2
+----
+
+\* INVARIANT definition @modelCorrectnessInvariants:0
+inv_1608145729981153000 ==
+Cpu[2].id = 2
+----
+\* INVARIANT definition @modelCorrectnessInvariants:1
+inv_1608145729982154000 ==
+cpu /= 0
+----
 =============================================================================
 \* Modification History
-\* Created Thu Sep 17 09:10:33 PDT 2020 by mjmccall
+\* Created Wed Dec 16 11:08:49 PST 2020 by mjmccall
