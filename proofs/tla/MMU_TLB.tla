@@ -49,6 +49,8 @@ variables tlb = [entry \in 0..MAX_TLB_ENTRIES-1 |->
          tlb_type_return = 0, (* TODO: Make sure this have write/read atomicity *)
          tlb_lookup_return,
          memory_load_return,
+        \* perhaps convert this into a scalar variable so writing to it denotes write to memory store
+        \* and reading from it denotes reading from physical memory store
          memory = [address \in 0..268435456|-> 0];
          
          \*addr \in nondet_u32;
@@ -135,15 +137,19 @@ Inc:
     return;
 end procedure;
 
+\* the physical addr has been vetted by the TLB translation
 procedure memory_load(addr) begin
 Start:
     memory_load_return := memory[addr];
+    \* memory_load_return := memory_store --> scalar variable trick
     return;
 end procedure;
 
+\* the physical addr has been vetted by the TLB translation
 procedure memory_store(addr, val) begin
 Start:
     memory[addr] := val;
+    \* memory_store = val
     return;
 end procedure;
 
