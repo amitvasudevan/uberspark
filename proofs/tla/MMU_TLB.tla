@@ -49,7 +49,7 @@ variables tlb = [entry \in 0..MAX_TLB_ENTRIES-1 |->
          tlb_type_return = 0, (* TODO: Make sure this have write/read atomicity *)
          tlb_lookup_return,
          memory_load_return,
-         memory = [address \in 0..268435456|-> 0];
+         memory = 0(*[address \in 0..268435456|-> 0]*);
          
          \*addr \in nondet_u32;
          
@@ -137,13 +137,13 @@ end procedure;
 
 procedure memory_load(addr) begin
 Start:
-    memory_load_return := memory[addr];
+    memory_load_return := memory(*[addr]*);
     return;
 end procedure;
 
 procedure memory_store(addr, val) begin
 Start:
-    memory[addr] := val;
+    memory(*[addr]*) := val;
     return;
 end procedure;
 
@@ -225,7 +225,7 @@ while TRUE do
 end while;
 
 end algorithm *)
-\* BEGIN TRANSLATION - the hash of the PCal code: PCal-53847e9b8c4619bbe14028c86ce2292d
+\* BEGIN TRANSLATION - the hash of the PCal code: PCal-0b289af29ed4332164f19158d66c0f70
 \* Label Start of procedure tlb_init at line 58 col 5 changed to Start_
 \* Label Loop of procedure tlb_type at line 109 col 5 changed to Loop_
 \* Label Inc of procedure tlb_type at line 115 col 9 changed to Inc_
@@ -271,7 +271,7 @@ Init == (* Global variables *)
         /\ tlb_type_return = 0
         /\ tlb_lookup_return = defaultInitValue
         /\ memory_load_return = defaultInitValue
-        /\ memory = [address \in 0..268435456|-> 0]
+        /\ memory = 0
         (* Procedure tlb_type *)
         /\ addr_ = defaultInitValue
         /\ i_ = 0
@@ -567,7 +567,7 @@ Inc == /\ pc = "Inc"
 tlb_lookup == Loop_t \/ Inc
 
 Start_m == /\ pc = "Start_m"
-           /\ memory_load_return' = memory[addr_m]
+           /\ memory_load_return' = memory
            /\ pc' = Head(stack).pc
            /\ addr_m' = Head(stack).addr_m
            /\ stack' = Tail(stack)
@@ -579,7 +579,7 @@ Start_m == /\ pc = "Start_m"
 memory_load == Start_m
 
 Start_me == /\ pc = "Start_me"
-            /\ memory' = [memory EXCEPT ![addr_me] = val]
+            /\ memory' = val
             /\ pc' = Head(stack).pc
             /\ addr_me' = Head(stack).addr_me
             /\ val' = Head(stack).val
@@ -830,10 +830,10 @@ Next == tlb_init \/ tlb_type \/ tlb_lookup \/ memory_load \/ memory_store
 
 Spec == Init /\ [][Next]_vars
 
-\* END TRANSLATION - the hash of the generated TLA code (remove to silence divergence warnings): TLA-8256ce3e49cf7a125569bd2bee7fd9c3
+\* END TRANSLATION - the hash of the generated TLA code (remove to silence divergence warnings): TLA-f78869efcec13a30f1b3e96ac45e85d5
 
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Dec 24 07:13:25 PST 2020 by mjmccall
+\* Last modified Mon Jan 11 07:33:13 PST 2021 by mjmccall
 \* Created Thu Dec 17 08:07:51 PST 2020 by mjmccall
