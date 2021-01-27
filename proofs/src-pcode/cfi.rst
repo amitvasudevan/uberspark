@@ -66,8 +66,14 @@
 #define LEGACY_LINEAR_ADDR_SIZE 0x1F000000
 
 
-//current CPU privilege level register
-u32 cpu_cpl;
+// cpu state; see section 1.4.2 in overleaf paper for definitions of the fields
+struct {
+    u32 cpu_cpl;
+    u32 cpu_sp;
+    u32 cpu_id;
+} cpu_state_t;
+
+cpu_state_t cpu_state;
 
 
 struct {
@@ -208,14 +214,89 @@ legacy_code () {
 // CFI modeling specific functions below
 //------------------------------------------------------------------------------------------------------
 
+//NB: when cpu_cpl (CPU privilege level) is set to PRIVILEGE_LEVEL_UOBJCOLL we directly address
+//variables that belong within the  UOBJCOLL_NONSENTINEL_{PHYSICAL/LINEAR}_ADDR_BASE to
+//UOBJCOLL_NONSENTINEL_{PHYSICAL/LINEAR}_ADDR_SIZE. 
+//TBD: in principle we can convert all these direct memory refereces to go via cpu_read function (in tlb_model.rst)
+
+#define UOBJCOLL_MAX_STACKSIZE_PER_CPU  4096
+#define MAX_CPUS    1
+
+//for definitions of the fields see section 1.4.2 in the overleaf paper
+struct {
+    bool legacy_call;
+    bool interrupted;
+    u8 stack[MAX_CPUS][UOBJCOLL_MAX_STACKSIZE_PER_CPU];
+    u8 cpu_sp[MAX_CPUS];
+    u8 cpu_pc[MAX_CPUS];
+} uobjcoll_ssa_t;
+
+uobjcoll_ssa_t uobjcoll_ssa;
+
+
 uobjcoll_initmethod_entrysentinel(){
+    cpu_state.cpu_cpl = PRIVILEGE_LEVEL_UOBJCOLL;
+
+    if (uobjcoll_ssa.legacy_call == false && uobjcoll_ssa.interrupted == false) {
+
+        //setup uobjcoll execution stack
+        cpu_state.cpu_sp = &uobj_ssa.stack[cpu_state.cpu_id].stack[UOBJCOLL_MAX_STACKSIZE_PER_CPU];
+
+        uobjcoll_initmethod();
+
+    }
 
 }
 
 uobjcoll_publicmethod_entrysentinel(){
 
+    cpu_state.cpu_cpl = PRIVILEGE_LEVEL_UOBJCOLL;
+
+    if (uobjcoll_ssa.legacy_call == false && uobjcoll_ssa.interrupted == false) {
+        //setup uobjcoll execution stack
+        cpu_state.cpu_sp = &uobj_ssa.stack[cpu_state.cpu_id].stack[UOBJCOLL_MAX_STACKSIZE_PER_CPU];
+
+        uobjcoll_publicmethod();
+    }
 }
 
 uobjcoll_resumemethod_entrysentinel(){
+
+    cpu_state.cpu_cpl = PRIVILEGE_LEVEL_UOBJCOLL;
+
+    if (uobjcoll_ssa.legacy_call == true){
+        cpu_pc = uobj_ssa.cpu_pc[cpu_state_cpu_id];
+        cpu_sp = uobj_ssa.cpu_sp[cpu_state_cpu_id];
+    }
+
+}
+
+
+uobjcoll_initmethod(){
+
+    while(true){
+        switch(nondet_u32() mod 4){
+            case 0:
+                // read from uobjcoladdr = nondet_u32();
+                cpu_read(addr, cpl);
+                break;
+            case 1:
+                addr = nondet_u32();
+                cpu_write(addr, cpl);
+                break;
+            case 2:
+                addr = nondet_u32();
+                cpu_execute(addr, cpl);
+                break;
+            case 3:
+                cpu_halt();
+        }
+    }
+
+
+}
+
+uobjcoll_publicmethod(){
+
 
 }
