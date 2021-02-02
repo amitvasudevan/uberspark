@@ -71,6 +71,7 @@ struct {
     u32 cpu_cpl;
     u32 cpu_sp;
     u32 cpu_id;
+    u32 cpu_pc;
 } cpu_state_t;
 
 cpu_state_t cpu_state;
@@ -212,6 +213,7 @@ legacy_code () {
 
 //------------------------------------------------------------------------------------------------------
 // CFI modeling specific functions below
+// currently models invariants in overleaf paper section 1.8.2
 //------------------------------------------------------------------------------------------------------
 
 //NB: when cpu_cpl (CPU privilege level) is set to PRIVILEGE_LEVEL_UOBJCOLL we directly address
@@ -265,38 +267,78 @@ uobjcoll_resumemethod_entrysentinel(){
     cpu_state.cpu_cpl = PRIVILEGE_LEVEL_UOBJCOLL;
 
     if (uobjcoll_ssa.legacy_call == true){
-        cpu_pc = uobj_ssa.cpu_pc[cpu_state_cpu_id];
-        cpu_sp = uobj_ssa.cpu_sp[cpu_state_cpu_id];
+        cpu_pc = uobj_ssa.cpu_pc[cpu_state.cpu_id];
+        cpu_sp = uobj_ssa.cpu_sp[cpu_state.cpu_id];
     }
 
+}
+
+legacy_code_exit_sentinel(){
+
+   uobj_ssa.cpu_pc[cpu_state.cpu_id] = cpu_state.cpu_pc;
+   uobj_ssa.cpu_sp[cpu_state.cpu_id] = cpu_state.cpu_sp;
+
+   uobjcoll_ssa.legacy_call = true;
+
+   cpu_state.cpu_cpl = PRIVILEGE_LEVEL_LEGACY;
+   legacy_code();
 }
 
 
 uobjcoll_initmethod(){
 
     while(true){
-        switch(nondet_u32() mod 4){
+        switch(nondet_u32() mod 5){
             case 0:
-                // read from uobjcoladdr = nondet_u32();
+                //TBD: scope it down to uobj data segment reads
+                addr = nondet_u32(UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE, UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE);
                 cpu_read(addr, cpl);
                 break;
             case 1:
-                addr = nondet_u32();
+                //TBD: scope it down to uobj data segment writes
+                addr = nondet_u32(UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE, UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE);
                 cpu_write(addr, cpl);
                 break;
             case 2:
-                addr = nondet_u32();
+                //TBD: scope it down to uobj code segment executes
+                addr = nondet_u32(UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE, UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE);
                 cpu_execute(addr, cpl);
                 break;
             case 3:
                 cpu_halt();
+            case 4:
+                //TBD: bring this in via cpu_execute(addr, cpl)
+                legacy_code_exit_sentinel();
         }
     }
-
 
 }
 
 uobjcoll_publicmethod(){
 
+    while(true){
+        switch(nondet_u32() mod 5){
+            case 0:
+                //TBD: scope it down to uobj data segment reads
+                addr = nondet_u32(UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE, UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE);
+                cpu_read(addr, cpl);
+                break;
+            case 1:
+                //TBD: scope it down to uobj data segment writes
+                addr = nondet_u32(UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE, UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE);
+                cpu_write(addr, cpl);
+                break;
+            case 2:
+                //TBD: scope it down to uobj code segment executes
+                addr = nondet_u32(UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE, UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE);
+                cpu_execute(addr, cpl);
+                break;
+            case 3:
+                cpu_halt();
+            case 4:
+                //TBD: bring this in via cpu_execute(addr, cpl)
+                legacy_code_exit_sentinel();
+        }
+    }
 
 }
