@@ -19,3 +19,24 @@ Note: Importing the model is not working for me right now, so copy over the Mode
 A model is run by TLC Model Checker -> Run Model, pressing F11, or clicking the green arrow near the top of left of the window after opening a model.
 
 
+TLA+ Command-line Tools
+-----------------------
+
+Multiple ways to do this exist. The one I am trying right now is from <https://github.com/hwayne/tlacli>. You need Java, Python 3, and pip. To install, run:
+::
+
+pip install tlacli
+
+Make sure the `tlacli` script is in your path.
+
+To check the model, run (from the proofs/tla directory):
+::
+
+tlacli check --cfg uSpark.cfg uSpark.tla
+
+After altering the pluscal algorithm, to re-translate and parse, run:
+::
+
+tlacli translate --cfg uSpark.tla
+
+Constants can be altered in uSpark.cfg. More instructions on invariants, how to alter the model, and TLAPS (the proof system) forthcoming.
