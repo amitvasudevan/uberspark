@@ -34,8 +34,9 @@ variables cpu = MAXCPUS, \* for test iterating through CPUs
              ],
              
     \*line = 0;   \* for debugging traces       
-    cfi = TRUE; \* for tracking CFI, any time CF is altered, check src/dest
-
+    cfi = TRUE, \* for tracking CFI, any time CF is altered, check src/dest
+    call_stack = 3;
+    
 (***************************************************************************)
 (* CFI_observer(p) is called any time a Cpu[p].Pc is altered.  After       *)
 (* checking that control does not flow directly between an uObject and     *)
@@ -82,9 +83,12 @@ Start:
 Loop:
     while TRUE do
         either
-            with col \in 1..MAXUOBJCOLLECTIONS do
-                call Entry_sentinel(p, col, LEGACY, FALSE);
-            end with;
+            if call_stack > 0 then
+                call_stack := call_stack - 1;
+                with col \in 1..MAXUOBJCOLLECTIONS do
+                    call Entry_sentinel(p, col, LEGACY, FALSE);
+                end with;
+            end if;
         or 
             memory.Mem_legacy := LEGACY;        \* Read/write to memory.mem_legacy[]
         or  
@@ -175,11 +179,20 @@ Start:
 Loop:
         while ~Uobj_finished do
             either
-                call Uobject_code_c_func(p, c, o, UBER);
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Uobject_code_c_func(p, c, o, UBER);
+                end if;
             or 
-                call Uobject_code_casm_func(p, c, o, UBER);
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Uobject_code_casm_func(p, c, o, UBER);
+                end if;
             or  
-                call Exit_sentinel(p, UBER, TRUE);                          \* Call legacy function
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Exit_sentinel(p, UBER, TRUE);                          \* Call legacy function
+                end if;
             or 
                 Cpu[p].Res_cpustate[c][o] := 100*c + o;                     \* Access the CPU state reserved to this object
             or 
@@ -208,12 +221,21 @@ Start:
 Loop:
         while ~cfunc_finished do 
             either
-                call Uobject_code_c_func(p, c, o, UBER);
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Uobject_code_c_func(p, c, o, UBER);
+                end if;
             or 
-                call Uobject_code_casm_func(p, c, o, UBER);
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Uobject_code_casm_func(p, c, o, UBER);
+                end if;
             or  
 
-                call Exit_sentinel(p, UBER, TRUE);
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Exit_sentinel(p, UBER, TRUE);
+                end if;
             or 
                 Cpu[p].Res_cpustate[c][o] := 100*c + o;
             or 
@@ -243,11 +265,20 @@ Start:
 Loop:
         while ~casmfunc_finished do
             either
-                call Uobject_code_c_func(p, c, o, UBER);
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Uobject_code_c_func(p, c, o, UBER);
+                end if;
             or 
-                call Uobject_code_casm_func(p, c, o, UBER);
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Uobject_code_casm_func(p, c, o, UBER);
+                end if;
             or  
-                call Exit_sentinel(p, UBER, TRUE);
+                if call_stack > 0 then
+                    call_stack := call_stack - 1;
+                    call Exit_sentinel(p, UBER, TRUE);
+                end if;
             or
                 Cpu[p].Res_cpustate[c][o] := 100*c + o;
             or
@@ -290,75 +321,81 @@ Loop:
     return;
 end procedure;
 
-(* Iterate through each CPU process. This will become 
-the processes when multithreading is implemented *)
+process one = 1
 begin
-Loop:
-while cpu > 0 do
-    call Cpu_process(cpu);
-Dec:
-    cpu := cpu - 1;
-end while;
+  A:
+    call Cpu_process(1);
+end process;
+
+process two = 2
+begin
+  A:
+    call Cpu_process(2);
+end process;
+
 
 end algorithm *)
 \* BEGIN TRANSLATION - the hash of the PCal code: PCal-7c5b65bfe537008e0cf5632193526bb0
-\* Label Start of procedure CFI_observer at line 46 col 5 changed to Start_
-\* Label Start of procedure Cpu_process at line 59 col 5 changed to Start_C
-\* Label Call of procedure Cpu_process at line 62 col 9 changed to Call_
-\* Label Start of procedure Legacy_code at line 80 col 5 changed to Start_L
-\* Label Loop of procedure Legacy_code at line 83 col 5 changed to Loop_
-\* Label Start of procedure Entry_sentinel at line 108 col 5 changed to Start_E
-\* Label End of procedure Entry_sentinel at line 119 col 5 changed to End_
-\* Label Start of procedure Exit_sentinel at line 130 col 5 changed to Start_Ex
-\* Label End of procedure Exit_sentinel at line 140 col 5 changed to End_E
-\* Label Start of procedure Uobjcollection_code at line 151 col 5 changed to Start_U
-\* Label Start of procedure Uobject_code at line 172 col 5 changed to Start_Uo
-\* Label Loop of procedure Uobject_code at line 176 col 9 changed to Loop_U
-\* Label End of procedure Uobject_code at line 198 col 5 changed to End_U
-\* Label Start of procedure Uobject_code_c_func at line 205 col 5 changed to Start_Uob
-\* Label Loop of procedure Uobject_code_c_func at line 209 col 9 changed to Loop_Uo
-\* Label End of procedure Uobject_code_c_func at line 233 col 5 changed to End_Uo
-\* Label Start of procedure Uobject_code_casm_func at line 240 col 5 changed to Start_Uobj
-\* Label Loop of procedure Uobject_code_casm_func at line 244 col 9 changed to Loop_Uob
-\* Label End of procedure Uobject_code_casm_func at line 265 col 5 changed to End_Uob
-\* Label Loop of procedure device_process at line 281 col 5 changed to Loop_d
-\* Parameter p of procedure CFI_observer at line 44 col 24 changed to p_
-\* Parameter p of procedure Cpu_process at line 57 col 23 changed to p_C
-\* Parameter p of procedure Legacy_code at line 78 col 23 changed to p_L
-\* Parameter saved_pc of procedure Legacy_code at line 78 col 26 changed to saved_pc_
-\* Parameter p of procedure Entry_sentinel at line 106 col 26 changed to p_E
-\* Parameter c of procedure Entry_sentinel at line 106 col 29 changed to c_
-\* Parameter saved_pc of procedure Entry_sentinel at line 106 col 32 changed to saved_pc_E
-\* Parameter func of procedure Entry_sentinel at line 106 col 42 changed to func_
-\* Parameter p of procedure Exit_sentinel at line 128 col 25 changed to p_Ex
-\* Parameter saved_pc of procedure Exit_sentinel at line 128 col 28 changed to saved_pc_Ex
-\* Parameter p of procedure Uobjcollection_code at line 149 col 31 changed to p_U
-\* Parameter c of procedure Uobjcollection_code at line 149 col 34 changed to c_U
-\* Parameter saved_pc of procedure Uobjcollection_code at line 149 col 37 changed to saved_pc_U
-\* Parameter p of procedure Uobject_code at line 167 col 24 changed to p_Uo
-\* Parameter c of procedure Uobject_code at line 167 col 27 changed to c_Uo
-\* Parameter o of procedure Uobject_code at line 167 col 30 changed to o_
-\* Parameter saved_pc of procedure Uobject_code at line 167 col 33 changed to saved_pc_Uo
-\* Parameter p of procedure Uobject_code_c_func at line 201 col 31 changed to p_Uob
-\* Parameter c of procedure Uobject_code_c_func at line 201 col 34 changed to c_Uob
-\* Parameter o of procedure Uobject_code_c_func at line 201 col 37 changed to o_U
-\* Parameter saved_pc of procedure Uobject_code_c_func at line 201 col 40 changed to saved_pc_Uob
-\* Parameter p of procedure Uobject_code_casm_func at line 236 col 34 changed to p_Uobj
-\* Parameter saved_pc of procedure Uobject_code_casm_func at line 236 col 43 changed to saved_pc_Uobj
-\* Parameter p of procedure Uobject_code_legacy_func at line 268 col 36 changed to p_Uobje
+\* Label Start of procedure CFI_observer at line 123 col 5 changed to Start_
+\* Label Start of procedure Cpu_process at line 136 col 5 changed to Start_C
+\* Label Call of procedure Cpu_process at line 139 col 9 changed to Call_
+\* Label Start of procedure Legacy_code at line 157 col 5 changed to Start_L
+\* Label Loop of procedure Legacy_code at line 160 col 5 changed to Loop_
+\* Label Start of procedure Entry_sentinel at line 188 col 5 changed to Start_E
+\* Label End of procedure Entry_sentinel at line 199 col 5 changed to End_
+\* Label Start of procedure Exit_sentinel at line 210 col 5 changed to Start_Ex
+\* Label End of procedure Exit_sentinel at line 220 col 5 changed to End_E
+\* Label Start of procedure Uobjcollection_code at line 231 col 5 changed to Start_U
+\* Label Start of procedure Uobject_code at line 252 col 5 changed to Start_Uo
+\* Label Loop of procedure Uobject_code at line 256 col 9 changed to Loop_U
+\* Label End of procedure Uobject_code at line 287 col 5 changed to End_U
+\* Label Start of procedure Uobject_code_c_func at line 294 col 5 changed to Start_Uob
+\* Label Loop of procedure Uobject_code_c_func at line 298 col 9 changed to Loop_Uo
+\* Label End of procedure Uobject_code_c_func at line 331 col 5 changed to End_Uo
+\* Label Start of procedure Uobject_code_casm_func at line 338 col 5 changed to Start_Uobj
+\* Label Loop of procedure Uobject_code_casm_func at line 342 col 9 changed to Loop_Uob
+\* Label End of procedure Uobject_code_casm_func at line 372 col 5 changed to End_Uob
+\* Label A of process one at line 403 col 5 changed to A_
+\* Parameter p of procedure CFI_observer at line 121 col 24 changed to p_
+\* Parameter p of procedure Cpu_process at line 134 col 23 changed to p_C
+\* Parameter p of procedure Legacy_code at line 155 col 23 changed to p_L
+\* Parameter saved_pc of procedure Legacy_code at line 155 col 26 changed to saved_pc_
+\* Parameter p of procedure Entry_sentinel at line 186 col 26 changed to p_E
+\* Parameter c of procedure Entry_sentinel at line 186 col 29 changed to c_
+\* Parameter saved_pc of procedure Entry_sentinel at line 186 col 32 changed to saved_pc_E
+\* Parameter func of procedure Entry_sentinel at line 186 col 42 changed to func_
+\* Parameter p of procedure Exit_sentinel at line 208 col 25 changed to p_Ex
+\* Parameter saved_pc of procedure Exit_sentinel at line 208 col 28 changed to saved_pc_Ex
+\* Parameter p of procedure Uobjcollection_code at line 229 col 31 changed to p_U
+\* Parameter c of procedure Uobjcollection_code at line 229 col 34 changed to c_U
+\* Parameter saved_pc of procedure Uobjcollection_code at line 229 col 37 changed to saved_pc_U
+\* Parameter p of procedure Uobject_code at line 247 col 24 changed to p_Uo
+\* Parameter c of procedure Uobject_code at line 247 col 27 changed to c_Uo
+\* Parameter o of procedure Uobject_code at line 247 col 30 changed to o_
+\* Parameter saved_pc of procedure Uobject_code at line 247 col 33 changed to saved_pc_Uo
+\* Parameter p of procedure Uobject_code_c_func at line 290 col 31 changed to p_Uob
+\* Parameter c of procedure Uobject_code_c_func at line 290 col 34 changed to c_Uob
+\* Parameter o of procedure Uobject_code_c_func at line 290 col 37 changed to o_U
+\* Parameter saved_pc of procedure Uobject_code_c_func at line 290 col 40 changed to saved_pc_Uob
+\* Parameter p of procedure Uobject_code_casm_func at line 334 col 34 changed to p_Uobj
+\* Parameter saved_pc of procedure Uobject_code_casm_func at line 334 col 43 changed to saved_pc_Uobj
+\* Parameter p of procedure Uobject_code_legacy_func at line 375 col 36 changed to p_Uobje
 CONSTANT defaultInitValue
-VARIABLES cpu, Cpu, memory, cfi, pc, stack, p_, p_C, p_L, saved_pc_, p_E, c_, 
-          saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, saved_pc_U, 
-          p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, p_Uob, c_Uob, 
-          o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, 
-          saved_pc_Uobj, casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p
+VARIABLES cpu, Cpu, memory, cfi, call_stack, pc, stack, p_, p_C, p_L, 
+          saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
+          c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
+          Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+          in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, 
+          in_casmfunc, p_Uobje, saved_pc, p
 
-vars == << cpu, Cpu, memory, cfi, pc, stack, p_, p_C, p_L, saved_pc_, p_E, c_, 
-           saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, saved_pc_U, 
-           p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, p_Uob, c_Uob, 
-           o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, 
-           saved_pc_Uobj, casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, 
-           p >>
+vars == << cpu, Cpu, memory, cfi, call_stack, pc, stack, p_, p_C, p_L, 
+           saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, 
+           p_U, c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
+           Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+           in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, 
+           in_casmfunc, p_Uobje, saved_pc, p >>
+
+ProcSet == {1} \cup {2}
 
 Init == (* Global variables *)
         /\ cpu = MAXCPUS
@@ -384,120 +421,559 @@ Init == (* Global variables *)
                      ]
                     ]
         /\ cfi = TRUE
+        /\ call_stack = 3
         (* Procedure CFI_observer *)
-        /\ p_ = defaultInitValue
+        /\ p_ = [ self \in ProcSet |-> defaultInitValue]
         (* Procedure Cpu_process *)
-        /\ p_C = defaultInitValue
+        /\ p_C = [ self \in ProcSet |-> defaultInitValue]
         (* Procedure Legacy_code *)
-        /\ p_L = defaultInitValue
-        /\ saved_pc_ = defaultInitValue
+        /\ p_L = [ self \in ProcSet |-> defaultInitValue]
+        /\ saved_pc_ = [ self \in ProcSet |-> defaultInitValue]
         (* Procedure Entry_sentinel *)
-        /\ p_E = defaultInitValue
-        /\ c_ = defaultInitValue
-        /\ saved_pc_E = defaultInitValue
-        /\ func_ = defaultInitValue
+        /\ p_E = [ self \in ProcSet |-> defaultInitValue]
+        /\ c_ = [ self \in ProcSet |-> defaultInitValue]
+        /\ saved_pc_E = [ self \in ProcSet |-> defaultInitValue]
+        /\ func_ = [ self \in ProcSet |-> defaultInitValue]
         (* Procedure Exit_sentinel *)
-        /\ p_Ex = defaultInitValue
-        /\ saved_pc_Ex = defaultInitValue
-        /\ func = defaultInitValue
+        /\ p_Ex = [ self \in ProcSet |-> defaultInitValue]
+        /\ saved_pc_Ex = [ self \in ProcSet |-> defaultInitValue]
+        /\ func = [ self \in ProcSet |-> defaultInitValue]
         (* Procedure Uobjcollection_code *)
-        /\ p_U = defaultInitValue
-        /\ c_U = defaultInitValue
-        /\ saved_pc_U = defaultInitValue
+        /\ p_U = [ self \in ProcSet |-> defaultInitValue]
+        /\ c_U = [ self \in ProcSet |-> defaultInitValue]
+        /\ saved_pc_U = [ self \in ProcSet |-> defaultInitValue]
         (* Procedure Uobject_code *)
-        /\ p_Uo = defaultInitValue
-        /\ c_Uo = defaultInitValue
-        /\ o_ = defaultInitValue
-        /\ saved_pc_Uo = defaultInitValue
-        /\ In_uobj = FALSE
-        /\ Uobj_finished = FALSE
+        /\ p_Uo = [ self \in ProcSet |-> defaultInitValue]
+        /\ c_Uo = [ self \in ProcSet |-> defaultInitValue]
+        /\ o_ = [ self \in ProcSet |-> defaultInitValue]
+        /\ saved_pc_Uo = [ self \in ProcSet |-> defaultInitValue]
+        /\ In_uobj = [ self \in ProcSet |-> FALSE]
+        /\ Uobj_finished = [ self \in ProcSet |-> FALSE]
         (* Procedure Uobject_code_c_func *)
-        /\ p_Uob = defaultInitValue
-        /\ c_Uob = defaultInitValue
-        /\ o_U = defaultInitValue
-        /\ saved_pc_Uob = defaultInitValue
-        /\ cfunc_finished = FALSE
-        /\ in_cfunc = FALSE
+        /\ p_Uob = [ self \in ProcSet |-> defaultInitValue]
+        /\ c_Uob = [ self \in ProcSet |-> defaultInitValue]
+        /\ o_U = [ self \in ProcSet |-> defaultInitValue]
+        /\ saved_pc_Uob = [ self \in ProcSet |-> defaultInitValue]
+        /\ cfunc_finished = [ self \in ProcSet |-> FALSE]
+        /\ in_cfunc = [ self \in ProcSet |-> FALSE]
         (* Procedure Uobject_code_casm_func *)
-        /\ p_Uobj = defaultInitValue
-        /\ c = defaultInitValue
-        /\ o = defaultInitValue
-        /\ saved_pc_Uobj = defaultInitValue
-        /\ casmfunc_finished = FALSE
-        /\ in_casmfunc = FALSE
+        /\ p_Uobj = [ self \in ProcSet |-> defaultInitValue]
+        /\ c = [ self \in ProcSet |-> defaultInitValue]
+        /\ o = [ self \in ProcSet |-> defaultInitValue]
+        /\ saved_pc_Uobj = [ self \in ProcSet |-> defaultInitValue]
+        /\ casmfunc_finished = [ self \in ProcSet |-> FALSE]
+        /\ in_casmfunc = [ self \in ProcSet |-> FALSE]
         (* Procedure Uobject_code_legacy_func *)
-        /\ p_Uobje = defaultInitValue
-        /\ saved_pc = defaultInitValue
+        /\ p_Uobje = [ self \in ProcSet |-> defaultInitValue]
+        /\ saved_pc = [ self \in ProcSet |-> defaultInitValue]
         (* Procedure device_process *)
-        /\ p = defaultInitValue
-        /\ stack = << >>
-        /\ pc = "Loop"
+        /\ p = [ self \in ProcSet |-> defaultInitValue]
+        /\ stack = [self \in ProcSet |-> << >>]
+        /\ pc = [self \in ProcSet |-> CASE self = 1 -> "A_"
+                                        [] self = 2 -> "A"]
 
-Start_ == /\ pc = "Start_"
-          /\ IF (Cpu[p_].Pc_prev = LEGACY /\ Cpu[p_].Pc = UBER) \/ (Cpu[p_].Pc_prev = UBER /\ Cpu[p_].Pc = LEGACY)
-                THEN /\ cfi' = FALSE
-                ELSE /\ TRUE
-                     /\ cfi' = cfi
-          /\ Cpu' = [Cpu EXCEPT ![p_].Pc_prev = Cpu[p_].Pc]
-          /\ pc' = Head(stack).pc
-          /\ p_' = Head(stack).p_
-          /\ stack' = Tail(stack)
-          /\ UNCHANGED << cpu, memory, p_C, p_L, saved_pc_, p_E, c_, 
-                          saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, 
-                          saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                          Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                          cfunc_finished, in_cfunc, p_Uobj, c, o, 
-                          saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                          p_Uobje, saved_pc, p >>
+Start_(self) == /\ pc[self] = "Start_"
+                /\ IF (Cpu[p_[self]].Pc_prev = LEGACY /\ Cpu[p_[self]].Pc = UBER) \/ (Cpu[p_[self]].Pc_prev = UBER /\ Cpu[p_[self]].Pc = LEGACY)
+                      THEN /\ cfi' = FALSE
+                      ELSE /\ TRUE
+                           /\ cfi' = cfi
+                /\ Cpu' = [Cpu EXCEPT ![p_[self]].Pc_prev = Cpu[p_[self]].Pc]
+                /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
+                /\ p_' = [p_ EXCEPT ![self] = Head(stack[self]).p_]
+                /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
+                /\ UNCHANGED << cpu, memory, call_stack, p_C, p_L, saved_pc_, 
+                                p_E, c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, 
+                                func, p_U, c_U, saved_pc_U, p_Uo, c_Uo, o_, 
+                                saved_pc_Uo, In_uobj, Uobj_finished, p_Uob, 
+                                c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                                in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                                casmfunc_finished, in_casmfunc, p_Uobje, 
+                                saved_pc, p >>
 
-CFI_observer == Start_
+CFI_observer(self) == Start_(self)
 
-Start_C == /\ pc = "Start_C"
-           /\ \/ /\ Cpu' = [Cpu EXCEPT ![p_C].Pr = LEGACY]
-                 /\ pc' = "Call_"
-                 /\ UNCHANGED <<stack, p_U, c_U, saved_pc_U>>
-              \/ /\ \E col \in 1..MAXUOBJCOLLECTIONS:
-                      /\ Cpu' = [Cpu EXCEPT ![p_C].Pr = UBER]
-                      /\ /\ c_U' = col
-                         /\ p_U' = p_C
-                         /\ saved_pc_U' = 0
-                         /\ stack' = << [ procedure |->  "Uobjcollection_code",
-                                          pc        |->  "After_branching",
-                                          p_U       |->  p_U,
-                                          c_U       |->  c_U,
-                                          saved_pc_U |->  saved_pc_U ] >>
-                                      \o stack
-                      /\ pc' = "Start_U"
-           /\ UNCHANGED << cpu, memory, cfi, p_, p_C, p_L, saved_pc_, p_E, c_, 
-                           saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_Uo, 
-                           c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
-                           p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
-                           in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                           casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, 
-                           p >>
+Start_C(self) == /\ pc[self] = "Start_C"
+                 /\ \/ /\ Cpu' = [Cpu EXCEPT ![p_C[self]].Pr = LEGACY]
+                       /\ pc' = [pc EXCEPT ![self] = "Call_"]
+                       /\ UNCHANGED <<stack, p_U, c_U, saved_pc_U>>
+                    \/ /\ \E col \in 1..MAXUOBJCOLLECTIONS:
+                            /\ Cpu' = [Cpu EXCEPT ![p_C[self]].Pr = UBER]
+                            /\ /\ c_U' = [c_U EXCEPT ![self] = col]
+                               /\ p_U' = [p_U EXCEPT ![self] = p_C[self]]
+                               /\ saved_pc_U' = [saved_pc_U EXCEPT ![self] = 0]
+                               /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobjcollection_code",
+                                                                        pc        |->  "After_branching",
+                                                                        p_U       |->  p_U[self],
+                                                                        c_U       |->  c_U[self],
+                                                                        saved_pc_U |->  saved_pc_U[self] ] >>
+                                                                    \o stack[self]]
+                            /\ pc' = [pc EXCEPT ![self] = "Start_U"]
+                 /\ UNCHANGED << cpu, memory, cfi, call_stack, p_, p_C, p_L, 
+                                 saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                                 saved_pc_Ex, func, p_Uo, c_Uo, o_, 
+                                 saved_pc_Uo, In_uobj, Uobj_finished, p_Uob, 
+                                 c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                                 in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                                 casmfunc_finished, in_casmfunc, p_Uobje, 
+                                 saved_pc, p >>
 
-Call_ == /\ pc = "Call_"
-         /\ /\ p_L' = p_C
-            /\ saved_pc_' = 0
-            /\ stack' = << [ procedure |->  "Legacy_code",
-                             pc        |->  Head(stack).pc,
-                             p_L       |->  p_L,
-                             saved_pc_ |->  saved_pc_ ] >>
-                         \o Tail(stack)
-         /\ pc' = "Start_L"
-         /\ UNCHANGED << cpu, Cpu, memory, cfi, p_, p_C, p_E, c_, saved_pc_E, 
-                         func_, p_Ex, saved_pc_Ex, func, p_U, c_U, saved_pc_U, 
-                         p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
-                         p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
-                         in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                         casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
+Call_(self) == /\ pc[self] = "Call_"
+               /\ /\ p_L' = [p_L EXCEPT ![self] = p_C[self]]
+                  /\ saved_pc_' = [saved_pc_ EXCEPT ![self] = 0]
+                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Legacy_code",
+                                                           pc        |->  Head(stack[self]).pc,
+                                                           p_L       |->  p_L[self],
+                                                           saved_pc_ |->  saved_pc_[self] ] >>
+                                                       \o Tail(stack[self])]
+               /\ pc' = [pc EXCEPT ![self] = "Start_L"]
+               /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, p_C, p_E, 
+                               c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, 
+                               p_U, c_U, saved_pc_U, p_Uo, c_Uo, o_, 
+                               saved_pc_Uo, In_uobj, Uobj_finished, p_Uob, 
+                               c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                               in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                               casmfunc_finished, in_casmfunc, p_Uobje, 
+                               saved_pc, p >>
 
-After_branching == /\ pc = "After_branching"
-                   /\ pc' = Head(stack).pc
-                   /\ p_C' = Head(stack).p_C
-                   /\ stack' = Tail(stack)
-                   /\ UNCHANGED << cpu, Cpu, memory, cfi, p_, p_L, saved_pc_, 
-                                   p_E, c_, saved_pc_E, func_, p_Ex, 
+After_branching(self) == /\ pc[self] = "After_branching"
+                         /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
+                         /\ p_C' = [p_C EXCEPT ![self] = Head(stack[self]).p_C]
+                         /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
+                         /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, 
+                                         p_L, saved_pc_, p_E, c_, saved_pc_E, 
+                                         func_, p_Ex, saved_pc_Ex, func, p_U, 
+                                         c_U, saved_pc_U, p_Uo, c_Uo, o_, 
+                                         saved_pc_Uo, In_uobj, Uobj_finished, 
+                                         p_Uob, c_Uob, o_U, saved_pc_Uob, 
+                                         cfunc_finished, in_cfunc, p_Uobj, c, 
+                                         o, saved_pc_Uobj, casmfunc_finished, 
+                                         in_casmfunc, p_Uobje, saved_pc, p >>
+
+Cpu_process(self) == Start_C(self) \/ Call_(self) \/ After_branching(self)
+
+Start_L(self) == /\ pc[self] = "Start_L"
+                 /\ Cpu' = [Cpu EXCEPT ![p_L[self]].Pc = LEGACY]
+                 /\ /\ p_' = [p_ EXCEPT ![self] = p_L[self]]
+                    /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                             pc        |->  "Loop_",
+                                                             p_        |->  p_[self] ] >>
+                                                         \o stack[self]]
+                 /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                 /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                                 saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                                 saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                                 c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                                 p_Uob, c_Uob, o_U, saved_pc_Uob, 
+                                 cfunc_finished, in_cfunc, p_Uobj, c, o, 
+                                 saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
+                                 p_Uobje, saved_pc, p >>
+
+Loop_(self) == /\ pc[self] = "Loop_"
+               /\ \/ /\ IF call_stack > 0
+                           THEN /\ call_stack' = call_stack - 1
+                                /\ \E col \in 1..MAXUOBJCOLLECTIONS:
+                                     /\ /\ c_' = [c_ EXCEPT ![self] = col]
+                                        /\ func_' = [func_ EXCEPT ![self] = FALSE]
+                                        /\ p_E' = [p_E EXCEPT ![self] = p_L[self]]
+                                        /\ saved_pc_E' = [saved_pc_E EXCEPT ![self] = LEGACY]
+                                        /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Entry_sentinel",
+                                                                                 pc        |->  "Loop_",
+                                                                                 p_E       |->  p_E[self],
+                                                                                 c_        |->  c_[self],
+                                                                                 saved_pc_E |->  saved_pc_E[self],
+                                                                                 func_     |->  func_[self] ] >>
+                                                                             \o stack[self]]
+                                     /\ pc' = [pc EXCEPT ![self] = "Start_E"]
+                           ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_"]
+                                /\ UNCHANGED << call_stack, stack, p_E, c_, 
+                                                saved_pc_E, func_ >>
+                     /\ UNCHANGED <<Cpu, memory, p_>>
+                  \/ /\ memory' = [memory EXCEPT !.Mem_legacy = LEGACY]
+                     /\ pc' = [pc EXCEPT ![self] = "Loop_"]
+                     /\ UNCHANGED <<Cpu, call_stack, stack, p_, p_E, c_, saved_pc_E, func_>>
+                  \/ /\ Cpu' = [Cpu EXCEPT ![p_L[self]].Shared_cpustate = LEGACY]
+                     /\ pc' = [pc EXCEPT ![self] = "Loop_"]
+                     /\ UNCHANGED <<memory, call_stack, stack, p_, p_E, c_, saved_pc_E, func_>>
+                  \/ /\ Cpu' = [Cpu EXCEPT ![p_L[self]].Legacy_cpustate = LEGACY]
+                     /\ pc' = [pc EXCEPT ![self] = "Loop_"]
+                     /\ UNCHANGED <<memory, call_stack, stack, p_, p_E, c_, saved_pc_E, func_>>
+                  \/ /\ Cpu' = [Cpu EXCEPT ![p_L[self]].Pc = saved_pc_[self]]
+                     /\ /\ p_' = [p_ EXCEPT ![self] = p_L[self]]
+                        /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                                 pc        |->  Head(stack[self]).pc,
+                                                                 p_        |->  p_[self] ] >>
+                                                             \o Tail(stack[self])]
+                     /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                     /\ UNCHANGED <<memory, call_stack, p_E, c_, saved_pc_E, func_>>
+               /\ UNCHANGED << cpu, cfi, p_C, p_L, saved_pc_, p_Ex, 
+                               saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                               c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                               p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                               in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                               casmfunc_finished, in_casmfunc, p_Uobje, 
+                               saved_pc, p >>
+
+Legacy_code(self) == Start_L(self) \/ Loop_(self)
+
+Start_E(self) == /\ pc[self] = "Start_E"
+                 /\ Cpu' = [Cpu EXCEPT ![p_E[self]].Pc = SENTINEL]
+                 /\ /\ p_' = [p_ EXCEPT ![self] = p_E[self]]
+                    /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                             pc        |->  "Privilege_up",
+                                                             p_        |->  p_[self] ] >>
+                                                         \o stack[self]]
+                 /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                 /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                                 saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                                 saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                                 c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                                 p_Uob, c_Uob, o_U, saved_pc_Uob, 
+                                 cfunc_finished, in_cfunc, p_Uobj, c, o, 
+                                 saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
+                                 p_Uobje, saved_pc, p >>
+
+Privilege_up(self) == /\ pc[self] = "Privilege_up"
+                      /\ Cpu' = [Cpu EXCEPT ![p_E[self]].Pr = UBER]
+                      /\ IF func_[self]
+                            THEN /\ pc' = [pc EXCEPT ![self] = "End_"]
+                                 /\ UNCHANGED << stack, p_U, c_U, saved_pc_U >>
+                            ELSE /\ /\ c_U' = [c_U EXCEPT ![self] = c_[self]]
+                                    /\ p_U' = [p_U EXCEPT ![self] = p_E[self]]
+                                    /\ saved_pc_U' = [saved_pc_U EXCEPT ![self] = SENTINEL]
+                                    /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobjcollection_code",
+                                                                             pc        |->  "End_",
+                                                                             p_U       |->  p_U[self],
+                                                                             c_U       |->  c_U[self],
+                                                                             saved_pc_U |->  saved_pc_U[self] ] >>
+                                                                         \o stack[self]]
+                                 /\ pc' = [pc EXCEPT ![self] = "Start_U"]
+                      /\ UNCHANGED << cpu, memory, cfi, call_stack, p_, p_C, 
+                                      p_L, saved_pc_, p_E, c_, saved_pc_E, 
+                                      func_, p_Ex, saved_pc_Ex, func, p_Uo, 
+                                      c_Uo, o_, saved_pc_Uo, In_uobj, 
+                                      Uobj_finished, p_Uob, c_Uob, o_U, 
+                                      saved_pc_Uob, cfunc_finished, in_cfunc, 
+                                      p_Uobj, c, o, saved_pc_Uobj, 
+                                      casmfunc_finished, in_casmfunc, p_Uobje, 
+                                      saved_pc, p >>
+
+End_(self) == /\ pc[self] = "End_"
+              /\ Cpu' = [Cpu EXCEPT ![p_E[self]].Pc = saved_pc_E[self]]
+              /\ /\ p_' = [p_ EXCEPT ![self] = p_E[self]]
+                 /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                          pc        |->  Head(stack[self]).pc,
+                                                          p_        |->  p_[self] ] >>
+                                                      \o Tail(stack[self])]
+              /\ pc' = [pc EXCEPT ![self] = "Start_"]
+              /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                              saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                              saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                              c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                              p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                              in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                              casmfunc_finished, in_casmfunc, p_Uobje, 
+                              saved_pc, p >>
+
+Entry_sentinel(self) == Start_E(self) \/ Privilege_up(self) \/ End_(self)
+
+Start_Ex(self) == /\ pc[self] = "Start_Ex"
+                  /\ Cpu' = [Cpu EXCEPT ![p_Ex[self]].Pc = SENTINEL]
+                  /\ /\ p_' = [p_ EXCEPT ![self] = p_Ex[self]]
+                     /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                              pc        |->  "Privilege_down",
+                                                              p_        |->  p_[self] ] >>
+                                                          \o stack[self]]
+                  /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                  /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                                  saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                                  saved_pc_Ex, func, p_U, c_U, saved_pc_U, 
+                                  p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
+                                  Uobj_finished, p_Uob, c_Uob, o_U, 
+                                  saved_pc_Uob, cfunc_finished, in_cfunc, 
+                                  p_Uobj, c, o, saved_pc_Uobj, 
+                                  casmfunc_finished, in_casmfunc, p_Uobje, 
+                                  saved_pc, p >>
+
+Privilege_down(self) == /\ pc[self] = "Privilege_down"
+                        /\ Cpu' = [Cpu EXCEPT ![p_Ex[self]].Pr = LEGACY]
+                        /\ IF func[self]
+                              THEN /\ /\ p_Uobje' = [p_Uobje EXCEPT ![self] = p_Ex[self]]
+                                      /\ saved_pc' = [saved_pc EXCEPT ![self] = SENTINEL]
+                                      /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobject_code_legacy_func",
+                                                                               pc        |->  "End_E",
+                                                                               p_Uobje   |->  p_Uobje[self],
+                                                                               saved_pc  |->  saved_pc[self] ] >>
+                                                                           \o stack[self]]
+                                   /\ pc' = [pc EXCEPT ![self] = "Start"]
+                                   /\ UNCHANGED << p_L, saved_pc_ >>
+                              ELSE /\ /\ p_L' = [p_L EXCEPT ![self] = p_Ex[self]]
+                                      /\ saved_pc_' = [saved_pc_ EXCEPT ![self] = SENTINEL]
+                                      /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Legacy_code",
+                                                                               pc        |->  "End_E",
+                                                                               p_L       |->  p_L[self],
+                                                                               saved_pc_ |->  saved_pc_[self] ] >>
+                                                                           \o stack[self]]
+                                   /\ pc' = [pc EXCEPT ![self] = "Start_L"]
+                                   /\ UNCHANGED << p_Uobje, saved_pc >>
+                        /\ UNCHANGED << cpu, memory, cfi, call_stack, p_, p_C, 
+                                        p_E, c_, saved_pc_E, func_, p_Ex, 
+                                        saved_pc_Ex, func, p_U, c_U, 
+                                        saved_pc_U, p_Uo, c_Uo, o_, 
+                                        saved_pc_Uo, In_uobj, Uobj_finished, 
+                                        p_Uob, c_Uob, o_U, saved_pc_Uob, 
+                                        cfunc_finished, in_cfunc, p_Uobj, c, o, 
+                                        saved_pc_Uobj, casmfunc_finished, 
+                                        in_casmfunc, p >>
+
+End_E(self) == /\ pc[self] = "End_E"
+               /\ Cpu' = [Cpu EXCEPT ![p_Ex[self]].Pc = saved_pc_Ex[self]]
+               /\ /\ p_' = [p_ EXCEPT ![self] = p_Ex[self]]
+                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                           pc        |->  Head(stack[self]).pc,
+                                                           p_        |->  p_[self] ] >>
+                                                       \o Tail(stack[self])]
+               /\ pc' = [pc EXCEPT ![self] = "Start_"]
+               /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                               saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                               saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                               c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                               p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                               in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                               casmfunc_finished, in_casmfunc, p_Uobje, 
+                               saved_pc, p >>
+
+Exit_sentinel(self) == Start_Ex(self) \/ Privilege_down(self)
+                          \/ End_E(self)
+
+Start_U(self) == /\ pc[self] = "Start_U"
+                 /\ Cpu' = [Cpu EXCEPT ![p_U[self]].Pc = UBER]
+                 /\ /\ p_' = [p_ EXCEPT ![self] = p_U[self]]
+                    /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                             pc        |->  "Call",
+                                                             p_        |->  p_[self] ] >>
+                                                         \o stack[self]]
+                 /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                 /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                                 saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                                 saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                                 c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                                 p_Uob, c_Uob, o_U, saved_pc_Uob, 
+                                 cfunc_finished, in_cfunc, p_Uobj, c, o, 
+                                 saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
+                                 p_Uobje, saved_pc, p >>
+
+Call(self) == /\ pc[self] = "Call"
+              /\ \E object \in 1..MAXUOBJCOLLECTIONS:
+                   /\ /\ c_Uo' = [c_Uo EXCEPT ![self] = c_U[self]]
+                      /\ o_' = [o_ EXCEPT ![self] = object]
+                      /\ p_Uo' = [p_Uo EXCEPT ![self] = p_U[self]]
+                      /\ saved_pc_Uo' = [saved_pc_Uo EXCEPT ![self] = saved_pc_U[self]]
+                      /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobject_code",
+                                                               pc        |->  "Return",
+                                                               In_uobj   |->  In_uobj[self],
+                                                               Uobj_finished |->  Uobj_finished[self],
+                                                               p_Uo      |->  p_Uo[self],
+                                                               c_Uo      |->  c_Uo[self],
+                                                               o_        |->  o_[self],
+                                                               saved_pc_Uo |->  saved_pc_Uo[self] ] >>
+                                                           \o stack[self]]
+                   /\ In_uobj' = [In_uobj EXCEPT ![self] = FALSE]
+                   /\ Uobj_finished' = [Uobj_finished EXCEPT ![self] = FALSE]
+                   /\ pc' = [pc EXCEPT ![self] = "Start_Uo"]
+              /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, p_C, p_L, 
+                              saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                              saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uob, 
+                              c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                              in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                              casmfunc_finished, in_casmfunc, p_Uobje, 
+                              saved_pc, p >>
+
+Return(self) == /\ pc[self] = "Return"
+                /\ Cpu' = [Cpu EXCEPT ![p_U[self]].Pc = saved_pc_U[self]]
+                /\ /\ p_' = [p_ EXCEPT ![self] = p_U[self]]
+                   /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                            pc        |->  Head(stack[self]).pc,
+                                                            p_        |->  p_[self] ] >>
+                                                        \o Tail(stack[self])]
+                /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                                saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                                saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                                c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                                p_Uob, c_Uob, o_U, saved_pc_Uob, 
+                                cfunc_finished, in_cfunc, p_Uobj, c, o, 
+                                saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
+                                p_Uobje, saved_pc, p >>
+
+Uobjcollection_code(self) == Start_U(self) \/ Call(self) \/ Return(self)
+
+Start_Uo(self) == /\ pc[self] = "Start_Uo"
+                  /\ IF ~In_uobj[self]
+                        THEN /\ Cpu' = [Cpu EXCEPT ![p_Uo[self]].Pc = UBER]
+                             /\ /\ p_' = [p_ EXCEPT ![self] = p_Uo[self]]
+                                /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                                         pc        |->  "Loop_U",
+                                                                         p_        |->  p_[self] ] >>
+                                                                     \o stack[self]]
+                             /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                        ELSE /\ pc' = [pc EXCEPT ![self] = "Uobj_finished_assign"]
+                             /\ UNCHANGED << Cpu, stack, p_ >>
+                  /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                                  saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                                  saved_pc_Ex, func, p_U, c_U, saved_pc_U, 
+                                  p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
+                                  Uobj_finished, p_Uob, c_Uob, o_U, 
+                                  saved_pc_Uob, cfunc_finished, in_cfunc, 
+                                  p_Uobj, c, o, saved_pc_Uobj, 
+                                  casmfunc_finished, in_casmfunc, p_Uobje, 
+                                  saved_pc, p >>
+
+Loop_U(self) == /\ pc[self] = "Loop_U"
+                /\ IF ~Uobj_finished[self]
+                      THEN /\ \/ /\ IF call_stack > 0
+                                       THEN /\ call_stack' = call_stack - 1
+                                            /\ /\ c_Uob' = [c_Uob EXCEPT ![self] = c_Uo[self]]
+                                               /\ o_U' = [o_U EXCEPT ![self] = o_[self]]
+                                               /\ p_Uob' = [p_Uob EXCEPT ![self] = p_Uo[self]]
+                                               /\ saved_pc_Uob' = [saved_pc_Uob EXCEPT ![self] = UBER]
+                                               /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobject_code_c_func",
+                                                                                        pc        |->  "Loop_U",
+                                                                                        cfunc_finished |->  cfunc_finished[self],
+                                                                                        in_cfunc  |->  in_cfunc[self],
+                                                                                        p_Uob     |->  p_Uob[self],
+                                                                                        c_Uob     |->  c_Uob[self],
+                                                                                        o_U       |->  o_U[self],
+                                                                                        saved_pc_Uob |->  saved_pc_Uob[self] ] >>
+                                                                                    \o stack[self]]
+                                            /\ cfunc_finished' = [cfunc_finished EXCEPT ![self] = FALSE]
+                                            /\ in_cfunc' = [in_cfunc EXCEPT ![self] = FALSE]
+                                            /\ pc' = [pc EXCEPT ![self] = "Start_Uob"]
+                                       ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
+                                            /\ UNCHANGED << call_stack, stack, 
+                                                            p_Uob, c_Uob, o_U, 
+                                                            saved_pc_Uob, 
+                                                            cfunc_finished, 
+                                                            in_cfunc >>
+                                 /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                              \/ /\ IF call_stack > 0
+                                       THEN /\ call_stack' = call_stack - 1
+                                            /\ /\ c' = [c EXCEPT ![self] = c_Uo[self]]
+                                               /\ o' = [o EXCEPT ![self] = o_[self]]
+                                               /\ p_Uobj' = [p_Uobj EXCEPT ![self] = p_Uo[self]]
+                                               /\ saved_pc_Uobj' = [saved_pc_Uobj EXCEPT ![self] = UBER]
+                                               /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobject_code_casm_func",
+                                                                                        pc        |->  "Loop_U",
+                                                                                        casmfunc_finished |->  casmfunc_finished[self],
+                                                                                        in_casmfunc |->  in_casmfunc[self],
+                                                                                        p_Uobj    |->  p_Uobj[self],
+                                                                                        c         |->  c[self],
+                                                                                        o         |->  o[self],
+                                                                                        saved_pc_Uobj |->  saved_pc_Uobj[self] ] >>
+                                                                                    \o stack[self]]
+                                            /\ casmfunc_finished' = [casmfunc_finished EXCEPT ![self] = FALSE]
+                                            /\ in_casmfunc' = [in_casmfunc EXCEPT ![self] = FALSE]
+                                            /\ pc' = [pc EXCEPT ![self] = "Start_Uobj"]
+                                       ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
+                                            /\ UNCHANGED << call_stack, stack, 
+                                                            p_Uobj, c, o, 
+                                                            saved_pc_Uobj, 
+                                                            casmfunc_finished, 
+                                                            in_casmfunc >>
+                                 /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc>>
+                              \/ /\ IF call_stack > 0
+                                       THEN /\ call_stack' = call_stack - 1
+                                            /\ /\ func' = [func EXCEPT ![self] = TRUE]
+                                               /\ p_Ex' = [p_Ex EXCEPT ![self] = p_Uo[self]]
+                                               /\ saved_pc_Ex' = [saved_pc_Ex EXCEPT ![self] = UBER]
+                                               /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Exit_sentinel",
+                                                                                        pc        |->  "Loop_U",
+                                                                                        p_Ex      |->  p_Ex[self],
+                                                                                        saved_pc_Ex |->  saved_pc_Ex[self],
+                                                                                        func      |->  func[self] ] >>
+                                                                                    \o stack[self]]
+                                            /\ pc' = [pc EXCEPT ![self] = "Start_Ex"]
+                                       ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
+                                            /\ UNCHANGED << call_stack, stack, 
+                                                            p_Ex, saved_pc_Ex, 
+                                                            func >>
+                                 /\ UNCHANGED <<Cpu, memory, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                              \/ /\ Cpu' = [Cpu EXCEPT ![p_Uo[self]].Res_cpustate[c_Uo[self]][o_[self]] = 100*c_Uo[self] + o_[self]]
+                                 /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
+                                 /\ UNCHANGED <<memory, call_stack, stack, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                              \/ /\ memory' = [memory EXCEPT !.Mem_uobjcollection[c_Uo[self]].memuobj[o_[self]].Mem = 100*c_Uo[self] + o_[self]]
+                                 /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
+                                 /\ UNCHANGED <<Cpu, call_stack, stack, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                              \/ /\ Uobj_finished' = [Uobj_finished EXCEPT ![self] = TRUE]
+                                 /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
+                                 /\ UNCHANGED <<Cpu, memory, call_stack, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                      ELSE /\ pc' = [pc EXCEPT ![self] = "Uobj_finished_assign"]
+                           /\ UNCHANGED << Cpu, memory, call_stack, stack, 
+                                           p_Ex, saved_pc_Ex, func, 
+                                           Uobj_finished, p_Uob, c_Uob, o_U, 
+                                           saved_pc_Uob, cfunc_finished, 
+                                           in_cfunc, p_Uobj, c, o, 
+                                           saved_pc_Uobj, casmfunc_finished, 
+                                           in_casmfunc >>
+                /\ UNCHANGED << cpu, cfi, p_, p_C, p_L, saved_pc_, p_E, c_, 
+                                saved_pc_E, func_, p_U, c_U, saved_pc_U, p_Uo, 
+                                c_Uo, o_, saved_pc_Uo, In_uobj, p_Uobje, 
+                                saved_pc, p >>
+
+Uobj_finished_assign(self) == /\ pc[self] = "Uobj_finished_assign"
+                              /\ Uobj_finished' = [Uobj_finished EXCEPT ![self] = FALSE]
+                              /\ In_uobj' = [In_uobj EXCEPT ![self] = FALSE]
+                              /\ Cpu' = [Cpu EXCEPT ![p_Uo[self]].Pc = saved_pc_Uo[self]]
+                              /\ /\ p_' = [p_ EXCEPT ![self] = p_Uo[self]]
+                                 /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                                          pc        |->  "End_U",
+                                                                          p_        |->  p_[self] ] >>
+                                                                      \o stack[self]]
+                              /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                              /\ UNCHANGED << cpu, memory, cfi, call_stack, 
+                                              p_C, p_L, saved_pc_, p_E, c_, 
+                                              saved_pc_E, func_, p_Ex, 
+                                              saved_pc_Ex, func, p_U, c_U, 
+                                              saved_pc_U, p_Uo, c_Uo, o_, 
+                                              saved_pc_Uo, p_Uob, c_Uob, o_U, 
+                                              saved_pc_Uob, cfunc_finished, 
+                                              in_cfunc, p_Uobj, c, o, 
+                                              saved_pc_Uobj, casmfunc_finished, 
+                                              in_casmfunc, p_Uobje, saved_pc, 
+                                              p >>
+
+End_U(self) == /\ pc[self] = "End_U"
+               /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
+               /\ In_uobj' = [In_uobj EXCEPT ![self] = Head(stack[self]).In_uobj]
+               /\ Uobj_finished' = [Uobj_finished EXCEPT ![self] = Head(stack[self]).Uobj_finished]
+               /\ p_Uo' = [p_Uo EXCEPT ![self] = Head(stack[self]).p_Uo]
+               /\ c_Uo' = [c_Uo EXCEPT ![self] = Head(stack[self]).c_Uo]
+               /\ o_' = [o_ EXCEPT ![self] = Head(stack[self]).o_]
+               /\ saved_pc_Uo' = [saved_pc_Uo EXCEPT ![self] = Head(stack[self]).saved_pc_Uo]
+               /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
+               /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, p_C, p_L, 
+                               saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                               saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uob, 
+                               c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                               in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                               casmfunc_finished, in_casmfunc, p_Uobje, 
+                               saved_pc, p >>
+
+Uobject_code(self) == Start_Uo(self) \/ Loop_U(self)
+                         \/ Uobj_finished_assign(self) \/ End_U(self)
+
+Start_Uob(self) == /\ pc[self] = "Start_Uob"
+                   /\ IF ~in_cfunc[self]
+                         THEN /\ Cpu' = [Cpu EXCEPT ![p_Uob[self]].Pc = UBER]
+                              /\ /\ p_' = [p_ EXCEPT ![self] = p_Uob[self]]
+                                 /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                                          pc        |->  "Loop_Uo",
+                                                                          p_        |->  p_[self] ] >>
+                                                                      \o stack[self]]
+                              /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                         ELSE /\ pc' = [pc EXCEPT ![self] = "Cfunc_finished_assign"]
+                              /\ UNCHANGED << Cpu, stack, p_ >>
+                   /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                                   saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
                                    saved_pc_Ex, func, p_U, c_U, saved_pc_U, 
                                    p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
                                    Uobj_finished, p_Uob, c_Uob, o_U, 
@@ -506,690 +982,387 @@ After_branching == /\ pc = "After_branching"
                                    casmfunc_finished, in_casmfunc, p_Uobje, 
                                    saved_pc, p >>
 
-Cpu_process == Start_C \/ Call_ \/ After_branching
+Loop_Uo(self) == /\ pc[self] = "Loop_Uo"
+                 /\ IF ~cfunc_finished[self]
+                       THEN /\ \/ /\ IF call_stack > 0
+                                        THEN /\ call_stack' = call_stack - 1
+                                             /\ /\ c_Uob' = [c_Uob EXCEPT ![self] = c_Uob[self]]
+                                                /\ o_U' = [o_U EXCEPT ![self] = o_U[self]]
+                                                /\ p_Uob' = [p_Uob EXCEPT ![self] = p_Uob[self]]
+                                                /\ saved_pc_Uob' = [saved_pc_Uob EXCEPT ![self] = UBER]
+                                                /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobject_code_c_func",
+                                                                                         pc        |->  "Loop_Uo",
+                                                                                         cfunc_finished |->  cfunc_finished[self],
+                                                                                         in_cfunc  |->  in_cfunc[self],
+                                                                                         p_Uob     |->  p_Uob[self],
+                                                                                         c_Uob     |->  c_Uob[self],
+                                                                                         o_U       |->  o_U[self],
+                                                                                         saved_pc_Uob |->  saved_pc_Uob[self] ] >>
+                                                                                     \o stack[self]]
+                                             /\ cfunc_finished' = [cfunc_finished EXCEPT ![self] = FALSE]
+                                             /\ in_cfunc' = [in_cfunc EXCEPT ![self] = FALSE]
+                                             /\ pc' = [pc EXCEPT ![self] = "Start_Uob"]
+                                        ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_Uo"]
+                                             /\ UNCHANGED << call_stack, stack, 
+                                                             p_Uob, c_Uob, o_U, 
+                                                             saved_pc_Uob, 
+                                                             cfunc_finished, 
+                                                             in_cfunc >>
+                                  /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                               \/ /\ IF call_stack > 0
+                                        THEN /\ call_stack' = call_stack - 1
+                                             /\ /\ c' = [c EXCEPT ![self] = c_Uob[self]]
+                                                /\ o' = [o EXCEPT ![self] = o_U[self]]
+                                                /\ p_Uobj' = [p_Uobj EXCEPT ![self] = p_Uob[self]]
+                                                /\ saved_pc_Uobj' = [saved_pc_Uobj EXCEPT ![self] = UBER]
+                                                /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobject_code_casm_func",
+                                                                                         pc        |->  "Loop_Uo",
+                                                                                         casmfunc_finished |->  casmfunc_finished[self],
+                                                                                         in_casmfunc |->  in_casmfunc[self],
+                                                                                         p_Uobj    |->  p_Uobj[self],
+                                                                                         c         |->  c[self],
+                                                                                         o         |->  o[self],
+                                                                                         saved_pc_Uobj |->  saved_pc_Uobj[self] ] >>
+                                                                                     \o stack[self]]
+                                             /\ casmfunc_finished' = [casmfunc_finished EXCEPT ![self] = FALSE]
+                                             /\ in_casmfunc' = [in_casmfunc EXCEPT ![self] = FALSE]
+                                             /\ pc' = [pc EXCEPT ![self] = "Start_Uobj"]
+                                        ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_Uo"]
+                                             /\ UNCHANGED << call_stack, stack, 
+                                                             p_Uobj, c, o, 
+                                                             saved_pc_Uobj, 
+                                                             casmfunc_finished, 
+                                                             in_casmfunc >>
+                                  /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc>>
+                               \/ /\ IF call_stack > 0
+                                        THEN /\ call_stack' = call_stack - 1
+                                             /\ /\ func' = [func EXCEPT ![self] = TRUE]
+                                                /\ p_Ex' = [p_Ex EXCEPT ![self] = p_Uob[self]]
+                                                /\ saved_pc_Ex' = [saved_pc_Ex EXCEPT ![self] = UBER]
+                                                /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Exit_sentinel",
+                                                                                         pc        |->  "Loop_Uo",
+                                                                                         p_Ex      |->  p_Ex[self],
+                                                                                         saved_pc_Ex |->  saved_pc_Ex[self],
+                                                                                         func      |->  func[self] ] >>
+                                                                                     \o stack[self]]
+                                             /\ pc' = [pc EXCEPT ![self] = "Start_Ex"]
+                                        ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_Uo"]
+                                             /\ UNCHANGED << call_stack, stack, 
+                                                             p_Ex, saved_pc_Ex, 
+                                                             func >>
+                                  /\ UNCHANGED <<Cpu, memory, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                               \/ /\ Cpu' = [Cpu EXCEPT ![p_Uob[self]].Res_cpustate[c_Uob[self]][o_U[self]] = 100*c_Uob[self] + o_U[self]]
+                                  /\ pc' = [pc EXCEPT ![self] = "Loop_Uo"]
+                                  /\ UNCHANGED <<memory, call_stack, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                               \/ /\ memory' = [memory EXCEPT !.Mem_uobjcollection[c_Uob[self]].memuobj[o_U[self]].Mem = 100*c_Uob[self] + o_U[self]]
+                                  /\ pc' = [pc EXCEPT ![self] = "Loop_Uo"]
+                                  /\ UNCHANGED <<Cpu, call_stack, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                               \/ /\ cfunc_finished' = [cfunc_finished EXCEPT ![self] = TRUE]
+                                  /\ pc' = [pc EXCEPT ![self] = "Loop_Uo"]
+                                  /\ UNCHANGED <<Cpu, memory, call_stack, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                       ELSE /\ pc' = [pc EXCEPT ![self] = "Cfunc_finished_assign"]
+                            /\ UNCHANGED << Cpu, memory, call_stack, stack, 
+                                            p_Ex, saved_pc_Ex, func, p_Uob, 
+                                            c_Uob, o_U, saved_pc_Uob, 
+                                            cfunc_finished, in_cfunc, p_Uobj, 
+                                            c, o, saved_pc_Uobj, 
+                                            casmfunc_finished, in_casmfunc >>
+                 /\ UNCHANGED << cpu, cfi, p_, p_C, p_L, saved_pc_, p_E, c_, 
+                                 saved_pc_E, func_, p_U, c_U, saved_pc_U, p_Uo, 
+                                 c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                                 p_Uobje, saved_pc, p >>
 
-Start_L == /\ pc = "Start_L"
-           /\ Cpu' = [Cpu EXCEPT ![p_L].Pc = LEGACY]
-           /\ /\ p_' = p_L
-              /\ stack' = << [ procedure |->  "CFI_observer",
-                               pc        |->  "Loop_",
-                               p_        |->  p_ ] >>
-                           \o stack
-           /\ pc' = "Start_"
-           /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                           saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                           c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                           In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                           saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, 
-                           o, saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                           p_Uobje, saved_pc, p >>
+Cfunc_finished_assign(self) == /\ pc[self] = "Cfunc_finished_assign"
+                               /\ cfunc_finished' = [cfunc_finished EXCEPT ![self] = FALSE]
+                               /\ in_cfunc' = [in_cfunc EXCEPT ![self] = FALSE]
+                               /\ Cpu' = [Cpu EXCEPT ![p_Uob[self]].Pc = saved_pc_Uob[self]]
+                               /\ /\ p_' = [p_ EXCEPT ![self] = p_Uob[self]]
+                                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                                           pc        |->  "End_Uo",
+                                                                           p_        |->  p_[self] ] >>
+                                                                       \o stack[self]]
+                               /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                               /\ UNCHANGED << cpu, memory, cfi, call_stack, 
+                                               p_C, p_L, saved_pc_, p_E, c_, 
+                                               saved_pc_E, func_, p_Ex, 
+                                               saved_pc_Ex, func, p_U, c_U, 
+                                               saved_pc_U, p_Uo, c_Uo, o_, 
+                                               saved_pc_Uo, In_uobj, 
+                                               Uobj_finished, p_Uob, c_Uob, 
+                                               o_U, saved_pc_Uob, p_Uobj, c, o, 
+                                               saved_pc_Uobj, 
+                                               casmfunc_finished, in_casmfunc, 
+                                               p_Uobje, saved_pc, p >>
 
-Loop_ == /\ pc = "Loop_"
-         /\ \/ /\ \E col \in 1..MAXUOBJCOLLECTIONS:
-                    /\ /\ c_' = col
-                       /\ func_' = FALSE
-                       /\ p_E' = p_L
-                       /\ saved_pc_E' = LEGACY
-                       /\ stack' = << [ procedure |->  "Entry_sentinel",
-                                        pc        |->  "Loop_",
-                                        p_E       |->  p_E,
-                                        c_        |->  c_,
-                                        saved_pc_E |->  saved_pc_E,
-                                        func_     |->  func_ ] >>
-                                    \o stack
-                    /\ pc' = "Start_E"
-               /\ UNCHANGED <<Cpu, memory, p_>>
-            \/ /\ memory' = [memory EXCEPT !.Mem_legacy = LEGACY]
-               /\ pc' = "Loop_"
-               /\ UNCHANGED <<Cpu, stack, p_, p_E, c_, saved_pc_E, func_>>
-            \/ /\ Cpu' = [Cpu EXCEPT ![p_L].Shared_cpustate = LEGACY]
-               /\ pc' = "Loop_"
-               /\ UNCHANGED <<memory, stack, p_, p_E, c_, saved_pc_E, func_>>
-            \/ /\ Cpu' = [Cpu EXCEPT ![p_L].Legacy_cpustate = LEGACY]
-               /\ pc' = "Loop_"
-               /\ UNCHANGED <<memory, stack, p_, p_E, c_, saved_pc_E, func_>>
-            \/ /\ Cpu' = [Cpu EXCEPT ![p_L].Pc = saved_pc_]
-               /\ /\ p_' = p_L
-                  /\ stack' = << [ procedure |->  "CFI_observer",
-                                   pc        |->  Head(stack).pc,
-                                   p_        |->  p_ ] >>
-                               \o Tail(stack)
-               /\ pc' = "Start_"
-               /\ UNCHANGED <<memory, p_E, c_, saved_pc_E, func_>>
-         /\ UNCHANGED << cpu, cfi, p_C, p_L, saved_pc_, p_Ex, saved_pc_Ex, 
-                         func, p_U, c_U, saved_pc_U, p_Uo, c_Uo, o_, 
-                         saved_pc_Uo, In_uobj, Uobj_finished, p_Uob, c_Uob, 
-                         o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, 
-                         c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                         p_Uobje, saved_pc, p >>
-
-Legacy_code == Start_L \/ Loop_
-
-Start_E == /\ pc = "Start_E"
-           /\ Cpu' = [Cpu EXCEPT ![p_E].Pc = SENTINEL]
-           /\ /\ p_' = p_E
-              /\ stack' = << [ procedure |->  "CFI_observer",
-                               pc        |->  "Privilege_up",
-                               p_        |->  p_ ] >>
-                           \o stack
-           /\ pc' = "Start_"
-           /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                           saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                           c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                           In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                           saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, 
-                           o, saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                           p_Uobje, saved_pc, p >>
-
-Privilege_up == /\ pc = "Privilege_up"
-                /\ Cpu' = [Cpu EXCEPT ![p_E].Pr = UBER]
-                /\ IF func_
-                      THEN /\ pc' = "End_"
-                           /\ UNCHANGED << stack, p_U, c_U, saved_pc_U >>
-                      ELSE /\ /\ c_U' = c_
-                              /\ p_U' = p_E
-                              /\ saved_pc_U' = SENTINEL
-                              /\ stack' = << [ procedure |->  "Uobjcollection_code",
-                                               pc        |->  "End_",
-                                               p_U       |->  p_U,
-                                               c_U       |->  c_U,
-                                               saved_pc_U |->  saved_pc_U ] >>
-                                           \o stack
-                           /\ pc' = "Start_U"
-                /\ UNCHANGED << cpu, memory, cfi, p_, p_C, p_L, saved_pc_, p_E, 
-                                c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, 
+End_Uo(self) == /\ pc[self] = "End_Uo"
+                /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
+                /\ cfunc_finished' = [cfunc_finished EXCEPT ![self] = Head(stack[self]).cfunc_finished]
+                /\ in_cfunc' = [in_cfunc EXCEPT ![self] = Head(stack[self]).in_cfunc]
+                /\ p_Uob' = [p_Uob EXCEPT ![self] = Head(stack[self]).p_Uob]
+                /\ c_Uob' = [c_Uob EXCEPT ![self] = Head(stack[self]).c_Uob]
+                /\ o_U' = [o_U EXCEPT ![self] = Head(stack[self]).o_U]
+                /\ saved_pc_Uob' = [saved_pc_Uob EXCEPT ![self] = Head(stack[self]).saved_pc_Uob]
+                /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
+                /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, p_C, 
+                                p_L, saved_pc_, p_E, c_, saved_pc_E, func_, 
+                                p_Ex, saved_pc_Ex, func, p_U, c_U, saved_pc_U, 
                                 p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                                Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                                cfunc_finished, in_cfunc, p_Uobj, c, o, 
-                                saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                                p_Uobje, saved_pc, p >>
+                                Uobj_finished, p_Uobj, c, o, saved_pc_Uobj, 
+                                casmfunc_finished, in_casmfunc, p_Uobje, 
+                                saved_pc, p >>
 
-End_ == /\ pc = "End_"
-        /\ Cpu' = [Cpu EXCEPT ![p_E].Pc = saved_pc_E]
-        /\ /\ p_' = p_E
-           /\ stack' = << [ procedure |->  "CFI_observer",
-                            pc        |->  Head(stack).pc,
-                            p_        |->  p_ ] >>
-                        \o Tail(stack)
-        /\ pc' = "Start_"
-        /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                        saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, 
-                        saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                        Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                        cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                        casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
+Uobject_code_c_func(self) == Start_Uob(self) \/ Loop_Uo(self)
+                                \/ Cfunc_finished_assign(self)
+                                \/ End_Uo(self)
 
-Entry_sentinel == Start_E \/ Privilege_up \/ End_
+Start_Uobj(self) == /\ pc[self] = "Start_Uobj"
+                    /\ IF ~in_casmfunc[self]
+                          THEN /\ Cpu' = [Cpu EXCEPT ![p_Uobj[self]].Pc = UBER]
+                               /\ /\ p_' = [p_ EXCEPT ![self] = p_Uobj[self]]
+                                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                                           pc        |->  "Loop_Uob",
+                                                                           p_        |->  p_[self] ] >>
+                                                                       \o stack[self]]
+                               /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                          ELSE /\ pc' = [pc EXCEPT ![self] = "End_Uob"]
+                               /\ UNCHANGED << Cpu, stack, p_ >>
+                    /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                                    saved_pc_, p_E, c_, saved_pc_E, func_, 
+                                    p_Ex, saved_pc_Ex, func, p_U, c_U, 
+                                    saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
+                                    In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
+                                    saved_pc_Uob, cfunc_finished, in_cfunc, 
+                                    p_Uobj, c, o, saved_pc_Uobj, 
+                                    casmfunc_finished, in_casmfunc, p_Uobje, 
+                                    saved_pc, p >>
 
-Start_Ex == /\ pc = "Start_Ex"
-            /\ Cpu' = [Cpu EXCEPT ![p_Ex].Pc = SENTINEL]
-            /\ /\ p_' = p_Ex
-               /\ stack' = << [ procedure |->  "CFI_observer",
-                                pc        |->  "Privilege_down",
-                                p_        |->  p_ ] >>
-                            \o stack
-            /\ pc' = "Start_"
-            /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                            saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                            c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                            In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                            saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, 
-                            o, saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                            p_Uobje, saved_pc, p >>
+Loop_Uob(self) == /\ pc[self] = "Loop_Uob"
+                  /\ IF ~casmfunc_finished[self]
+                        THEN /\ \/ /\ IF call_stack > 0
+                                         THEN /\ call_stack' = call_stack - 1
+                                              /\ /\ c_Uob' = [c_Uob EXCEPT ![self] = c[self]]
+                                                 /\ o_U' = [o_U EXCEPT ![self] = o[self]]
+                                                 /\ p_Uob' = [p_Uob EXCEPT ![self] = p_Uobj[self]]
+                                                 /\ saved_pc_Uob' = [saved_pc_Uob EXCEPT ![self] = UBER]
+                                                 /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobject_code_c_func",
+                                                                                          pc        |->  "Loop_Uob",
+                                                                                          cfunc_finished |->  cfunc_finished[self],
+                                                                                          in_cfunc  |->  in_cfunc[self],
+                                                                                          p_Uob     |->  p_Uob[self],
+                                                                                          c_Uob     |->  c_Uob[self],
+                                                                                          o_U       |->  o_U[self],
+                                                                                          saved_pc_Uob |->  saved_pc_Uob[self] ] >>
+                                                                                      \o stack[self]]
+                                              /\ cfunc_finished' = [cfunc_finished EXCEPT ![self] = FALSE]
+                                              /\ in_cfunc' = [in_cfunc EXCEPT ![self] = FALSE]
+                                              /\ pc' = [pc EXCEPT ![self] = "Start_Uob"]
+                                         ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_Uob"]
+                                              /\ UNCHANGED << call_stack, 
+                                                              stack, p_Uob, 
+                                                              c_Uob, o_U, 
+                                                              saved_pc_Uob, 
+                                                              cfunc_finished, 
+                                                              in_cfunc >>
+                                   /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                                \/ /\ IF call_stack > 0
+                                         THEN /\ call_stack' = call_stack - 1
+                                              /\ /\ c' = [c EXCEPT ![self] = c[self]]
+                                                 /\ o' = [o EXCEPT ![self] = o[self]]
+                                                 /\ p_Uobj' = [p_Uobj EXCEPT ![self] = p_Uobj[self]]
+                                                 /\ saved_pc_Uobj' = [saved_pc_Uobj EXCEPT ![self] = UBER]
+                                                 /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Uobject_code_casm_func",
+                                                                                          pc        |->  "Loop_Uob",
+                                                                                          casmfunc_finished |->  casmfunc_finished[self],
+                                                                                          in_casmfunc |->  in_casmfunc[self],
+                                                                                          p_Uobj    |->  p_Uobj[self],
+                                                                                          c         |->  c[self],
+                                                                                          o         |->  o[self],
+                                                                                          saved_pc_Uobj |->  saved_pc_Uobj[self] ] >>
+                                                                                      \o stack[self]]
+                                              /\ casmfunc_finished' = [casmfunc_finished EXCEPT ![self] = FALSE]
+                                              /\ in_casmfunc' = [in_casmfunc EXCEPT ![self] = FALSE]
+                                              /\ pc' = [pc EXCEPT ![self] = "Start_Uobj"]
+                                         ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_Uob"]
+                                              /\ UNCHANGED << call_stack, 
+                                                              stack, p_Uobj, c, 
+                                                              o, saved_pc_Uobj, 
+                                                              casmfunc_finished, 
+                                                              in_casmfunc >>
+                                   /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc>>
+                                \/ /\ IF call_stack > 0
+                                         THEN /\ call_stack' = call_stack - 1
+                                              /\ /\ func' = [func EXCEPT ![self] = TRUE]
+                                                 /\ p_Ex' = [p_Ex EXCEPT ![self] = p_Uobj[self]]
+                                                 /\ saved_pc_Ex' = [saved_pc_Ex EXCEPT ![self] = UBER]
+                                                 /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Exit_sentinel",
+                                                                                          pc        |->  "Loop_Uob",
+                                                                                          p_Ex      |->  p_Ex[self],
+                                                                                          saved_pc_Ex |->  saved_pc_Ex[self],
+                                                                                          func      |->  func[self] ] >>
+                                                                                      \o stack[self]]
+                                              /\ pc' = [pc EXCEPT ![self] = "Start_Ex"]
+                                         ELSE /\ pc' = [pc EXCEPT ![self] = "Loop_Uob"]
+                                              /\ UNCHANGED << call_stack, 
+                                                              stack, p_Ex, 
+                                                              saved_pc_Ex, 
+                                                              func >>
+                                   /\ UNCHANGED <<Cpu, memory, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                                \/ /\ Cpu' = [Cpu EXCEPT ![p_Uobj[self]].Res_cpustate[c[self]][o[self]] = 100*c[self] + o[self]]
+                                   /\ pc' = [pc EXCEPT ![self] = "Loop_Uob"]
+                                   /\ UNCHANGED <<memory, call_stack, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                                \/ /\ memory' = [memory EXCEPT !.Mem_uobjcollection[c[self]].memuobj[o[self]].Mem = 100*c[self] + o[self]]
+                                   /\ pc' = [pc EXCEPT ![self] = "Loop_Uob"]
+                                   /\ UNCHANGED <<Cpu, call_stack, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                                \/ /\ casmfunc_finished' = [casmfunc_finished EXCEPT ![self] = TRUE]
+                                   /\ pc' = [pc EXCEPT ![self] = "Loop_Uob"]
+                                   /\ UNCHANGED <<Cpu, memory, call_stack, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, in_casmfunc>>
+                             /\ p_' = p_
+                        ELSE /\ casmfunc_finished' = [casmfunc_finished EXCEPT ![self] = FALSE]
+                             /\ in_casmfunc' = [in_casmfunc EXCEPT ![self] = FALSE]
+                             /\ Cpu' = [Cpu EXCEPT ![p_Uobj[self]].Pc = saved_pc_Uobj[self]]
+                             /\ /\ p_' = [p_ EXCEPT ![self] = p_Uobj[self]]
+                                /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                                         pc        |->  "End_Uob",
+                                                                         p_        |->  p_[self] ] >>
+                                                                     \o stack[self]]
+                             /\ pc' = [pc EXCEPT ![self] = "Start_"]
+                             /\ UNCHANGED << memory, call_stack, p_Ex, 
+                                             saved_pc_Ex, func, p_Uob, c_Uob, 
+                                             o_U, saved_pc_Uob, cfunc_finished, 
+                                             in_cfunc, p_Uobj, c, o, 
+                                             saved_pc_Uobj >>
+                  /\ UNCHANGED << cpu, cfi, p_C, p_L, saved_pc_, p_E, c_, 
+                                  saved_pc_E, func_, p_U, c_U, saved_pc_U, 
+                                  p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
+                                  Uobj_finished, p_Uobje, saved_pc, p >>
 
-Privilege_down == /\ pc = "Privilege_down"
-                  /\ Cpu' = [Cpu EXCEPT ![p_Ex].Pr = LEGACY]
-                  /\ IF func
-                        THEN /\ /\ p_Uobje' = p_Ex
-                                /\ saved_pc' = SENTINEL
-                                /\ stack' = << [ procedure |->  "Uobject_code_legacy_func",
-                                                 pc        |->  "End_E",
-                                                 p_Uobje   |->  p_Uobje,
-                                                 saved_pc  |->  saved_pc ] >>
-                                             \o stack
-                             /\ pc' = "Start"
-                             /\ UNCHANGED << p_L, saved_pc_ >>
-                        ELSE /\ /\ p_L' = p_Ex
-                                /\ saved_pc_' = SENTINEL
-                                /\ stack' = << [ procedure |->  "Legacy_code",
-                                                 pc        |->  "End_E",
-                                                 p_L       |->  p_L,
-                                                 saved_pc_ |->  saved_pc_ ] >>
-                                             \o stack
-                             /\ pc' = "Start_L"
-                             /\ UNCHANGED << p_Uobje, saved_pc >>
-                  /\ UNCHANGED << cpu, memory, cfi, p_, p_C, p_E, c_, 
-                                  saved_pc_E, func_, p_Ex, saved_pc_Ex, func, 
-                                  p_U, c_U, saved_pc_U, p_Uo, c_Uo, o_, 
-                                  saved_pc_Uo, In_uobj, Uobj_finished, p_Uob, 
-                                  c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
-                                  in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                                  casmfunc_finished, in_casmfunc, p >>
+End_Uob(self) == /\ pc[self] = "End_Uob"
+                 /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
+                 /\ casmfunc_finished' = [casmfunc_finished EXCEPT ![self] = Head(stack[self]).casmfunc_finished]
+                 /\ in_casmfunc' = [in_casmfunc EXCEPT ![self] = Head(stack[self]).in_casmfunc]
+                 /\ p_Uobj' = [p_Uobj EXCEPT ![self] = Head(stack[self]).p_Uobj]
+                 /\ c' = [c EXCEPT ![self] = Head(stack[self]).c]
+                 /\ o' = [o EXCEPT ![self] = Head(stack[self]).o]
+                 /\ saved_pc_Uobj' = [saved_pc_Uobj EXCEPT ![self] = Head(stack[self]).saved_pc_Uobj]
+                 /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
+                 /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, p_C, 
+                                 p_L, saved_pc_, p_E, c_, saved_pc_E, func_, 
+                                 p_Ex, saved_pc_Ex, func, p_U, c_U, saved_pc_U, 
+                                 p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
+                                 Uobj_finished, p_Uob, c_Uob, o_U, 
+                                 saved_pc_Uob, cfunc_finished, in_cfunc, 
+                                 p_Uobje, saved_pc, p >>
 
-End_E == /\ pc = "End_E"
-         /\ Cpu' = [Cpu EXCEPT ![p_Ex].Pc = saved_pc_Ex]
-         /\ /\ p_' = p_Ex
-            /\ stack' = << [ procedure |->  "CFI_observer",
-                             pc        |->  Head(stack).pc,
-                             p_        |->  p_ ] >>
-                         \o Tail(stack)
-         /\ pc' = "Start_"
-         /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                         saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, 
-                         saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                         Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                         cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                         casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
+Uobject_code_casm_func(self) == Start_Uobj(self) \/ Loop_Uob(self)
+                                   \/ End_Uob(self)
 
-Exit_sentinel == Start_Ex \/ Privilege_down \/ End_E
+Start(self) == /\ pc[self] = "Start"
+               /\ Cpu' = [Cpu EXCEPT ![p_Uobje[self]].Pc = LEGACY]
+               /\ /\ p_' = [p_ EXCEPT ![self] = p_Uobje[self]]
+                  /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                           pc        |->  "End",
+                                                           p_        |->  p_[self] ] >>
+                                                       \o stack[self]]
+               /\ pc' = [pc EXCEPT ![self] = "Start_"]
+               /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, 
+                               saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                               saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                               c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                               p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                               in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                               casmfunc_finished, in_casmfunc, p_Uobje, 
+                               saved_pc, p >>
 
-Start_U == /\ pc = "Start_U"
-           /\ Cpu' = [Cpu EXCEPT ![p_U].Pc = UBER]
-           /\ /\ p_' = p_U
-              /\ stack' = << [ procedure |->  "CFI_observer",
-                               pc        |->  "Call",
-                               p_        |->  p_ ] >>
-                           \o stack
-           /\ pc' = "Start_"
-           /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                           saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                           c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                           In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                           saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, 
-                           o, saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                           p_Uobje, saved_pc, p >>
+End(self) == /\ pc[self] = "End"
+             /\ Cpu' = [Cpu EXCEPT ![p_Uobje[self]].Pc = saved_pc[self]]
+             /\ /\ p_' = [p_ EXCEPT ![self] = p_Uobje[self]]
+                /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "CFI_observer",
+                                                         pc        |->  Head(stack[self]).pc,
+                                                         p_        |->  p_[self] ] >>
+                                                     \o Tail(stack[self])]
+             /\ pc' = [pc EXCEPT ![self] = "Start_"]
+             /\ UNCHANGED << cpu, memory, cfi, call_stack, p_C, p_L, saved_pc_, 
+                             p_E, c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, 
+                             func, p_U, c_U, saved_pc_U, p_Uo, c_Uo, o_, 
+                             saved_pc_Uo, In_uobj, Uobj_finished, p_Uob, c_Uob, 
+                             o_U, saved_pc_Uob, cfunc_finished, in_cfunc, 
+                             p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, 
+                             in_casmfunc, p_Uobje, saved_pc, p >>
 
-Call == /\ pc = "Call"
-        /\ \E object \in 1..MAXUOBJCOLLECTIONS:
-             /\ /\ c_Uo' = c_U
-                /\ o_' = object
-                /\ p_Uo' = p_U
-                /\ saved_pc_Uo' = saved_pc_U
-                /\ stack' = << [ procedure |->  "Uobject_code",
-                                 pc        |->  "Return",
-                                 In_uobj   |->  In_uobj,
-                                 Uobj_finished |->  Uobj_finished,
-                                 p_Uo      |->  p_Uo,
-                                 c_Uo      |->  c_Uo,
-                                 o_        |->  o_,
-                                 saved_pc_Uo |->  saved_pc_Uo ] >>
-                             \o stack
-             /\ In_uobj' = FALSE
-             /\ Uobj_finished' = FALSE
-             /\ pc' = "Start_Uo"
-        /\ UNCHANGED << cpu, Cpu, memory, cfi, p_, p_C, p_L, saved_pc_, p_E, 
-                        c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                        c_U, saved_pc_U, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                        cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                        casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
+Uobject_code_legacy_func(self) == Start(self) \/ End(self)
 
-Return == /\ pc = "Return"
-          /\ Cpu' = [Cpu EXCEPT ![p_U].Pc = saved_pc_U]
-          /\ /\ p_' = p_U
-             /\ stack' = << [ procedure |->  "CFI_observer",
-                              pc        |->  Head(stack).pc,
-                              p_        |->  p_ ] >>
-                          \o Tail(stack)
-          /\ pc' = "Start_"
-          /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                          saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, 
-                          saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                          Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                          cfunc_finished, in_cfunc, p_Uobj, c, o, 
-                          saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                          p_Uobje, saved_pc, p >>
+Loop(self) == /\ pc[self] = "Loop"
+              /\ \/ /\ TRUE
+                    /\ pc' = [pc EXCEPT ![self] = "Loop"]
+                    /\ UNCHANGED <<stack, p>>
+                 \/ /\ TRUE
+                    /\ pc' = [pc EXCEPT ![self] = "Loop"]
+                    /\ UNCHANGED <<stack, p>>
+                 \/ /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
+                    /\ p' = [p EXCEPT ![self] = Head(stack[self]).p]
+                    /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
+              /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, p_C, p_L, 
+                              saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, 
+                              saved_pc_Ex, func, p_U, c_U, saved_pc_U, p_Uo, 
+                              c_Uo, o_, saved_pc_Uo, In_uobj, Uobj_finished, 
+                              p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, 
+                              in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                              casmfunc_finished, in_casmfunc, p_Uobje, 
+                              saved_pc >>
 
-Uobjcollection_code == Start_U \/ Call \/ Return
+device_process(self) == Loop(self)
 
-Start_Uo == /\ pc = "Start_Uo"
-            /\ IF ~In_uobj
-                  THEN /\ Cpu' = [Cpu EXCEPT ![p_Uo].Pc = UBER]
-                       /\ /\ p_' = p_Uo
-                          /\ stack' = << [ procedure |->  "CFI_observer",
-                                           pc        |->  "Loop_U",
-                                           p_        |->  p_ ] >>
-                                       \o stack
-                       /\ pc' = "Start_"
-                  ELSE /\ pc' = "Uobj_finished_assign"
-                       /\ UNCHANGED << Cpu, stack, p_ >>
-            /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                            saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                            c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                            In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                            saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, 
-                            o, saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                            p_Uobje, saved_pc, p >>
+A_ == /\ pc[1] = "A_"
+      /\ /\ p_C' = [p_C EXCEPT ![1] = 1]
+         /\ stack' = [stack EXCEPT ![1] = << [ procedure |->  "Cpu_process",
+                                               pc        |->  "Done",
+                                               p_C       |->  p_C[1] ] >>
+                                           \o stack[1]]
+      /\ pc' = [pc EXCEPT ![1] = "Start_C"]
+      /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, p_L, saved_pc_, 
+                      p_E, c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
+                      c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
+                      Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
+                      cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                      casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
 
-Loop_U == /\ pc = "Loop_U"
-          /\ IF ~Uobj_finished
-                THEN /\ \/ /\ /\ c_Uob' = c_Uo
-                              /\ o_U' = o_
-                              /\ p_Uob' = p_Uo
-                              /\ saved_pc_Uob' = UBER
-                              /\ stack' = << [ procedure |->  "Uobject_code_c_func",
-                                               pc        |->  "Loop_U",
-                                               cfunc_finished |->  cfunc_finished,
-                                               in_cfunc  |->  in_cfunc,
-                                               p_Uob     |->  p_Uob,
-                                               c_Uob     |->  c_Uob,
-                                               o_U       |->  o_U,
-                                               saved_pc_Uob |->  saved_pc_Uob ] >>
-                                           \o stack
-                           /\ cfunc_finished' = FALSE
-                           /\ in_cfunc' = FALSE
-                           /\ pc' = "Start_Uob"
-                           /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                        \/ /\ /\ c' = c_Uo
-                              /\ o' = o_
-                              /\ p_Uobj' = p_Uo
-                              /\ saved_pc_Uobj' = UBER
-                              /\ stack' = << [ procedure |->  "Uobject_code_casm_func",
-                                               pc        |->  "Loop_U",
-                                               casmfunc_finished |->  casmfunc_finished,
-                                               in_casmfunc |->  in_casmfunc,
-                                               p_Uobj    |->  p_Uobj,
-                                               c         |->  c,
-                                               o         |->  o,
-                                               saved_pc_Uobj |->  saved_pc_Uobj ] >>
-                                           \o stack
-                           /\ casmfunc_finished' = FALSE
-                           /\ in_casmfunc' = FALSE
-                           /\ pc' = "Start_Uobj"
-                           /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc>>
-                        \/ /\ /\ func' = TRUE
-                              /\ p_Ex' = p_Uo
-                              /\ saved_pc_Ex' = UBER
-                              /\ stack' = << [ procedure |->  "Exit_sentinel",
-                                               pc        |->  "Loop_U",
-                                               p_Ex      |->  p_Ex,
-                                               saved_pc_Ex |->  saved_pc_Ex,
-                                               func      |->  func ] >>
-                                           \o stack
-                           /\ pc' = "Start_Ex"
-                           /\ UNCHANGED <<Cpu, memory, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                        \/ /\ Cpu' = [Cpu EXCEPT ![p_Uo].Res_cpustate[c_Uo][o_] = 100*c_Uo + o_]
-                           /\ pc' = "Loop_U"
-                           /\ UNCHANGED <<memory, stack, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                        \/ /\ memory' = [memory EXCEPT !.Mem_uobjcollection[c_Uo].memuobj[o_].Mem = 100*c_Uo + o_]
-                           /\ pc' = "Loop_U"
-                           /\ UNCHANGED <<Cpu, stack, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                        \/ /\ Uobj_finished' = TRUE
-                           /\ pc' = "Loop_U"
-                           /\ UNCHANGED <<Cpu, memory, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                ELSE /\ pc' = "Uobj_finished_assign"
-                     /\ UNCHANGED << Cpu, memory, stack, p_Ex, saved_pc_Ex, 
-                                     func, Uobj_finished, p_Uob, c_Uob, o_U, 
-                                     saved_pc_Uob, cfunc_finished, in_cfunc, 
-                                     p_Uobj, c, o, saved_pc_Uobj, 
-                                     casmfunc_finished, in_casmfunc >>
-          /\ UNCHANGED << cpu, cfi, p_, p_C, p_L, saved_pc_, p_E, c_, 
-                          saved_pc_E, func_, p_U, c_U, saved_pc_U, p_Uo, c_Uo, 
-                          o_, saved_pc_Uo, In_uobj, p_Uobje, saved_pc, p >>
+one == A_
 
-Uobj_finished_assign == /\ pc = "Uobj_finished_assign"
-                        /\ Uobj_finished' = FALSE
-                        /\ In_uobj' = FALSE
-                        /\ Cpu' = [Cpu EXCEPT ![p_Uo].Pc = saved_pc_Uo]
-                        /\ /\ p_' = p_Uo
-                           /\ stack' = << [ procedure |->  "CFI_observer",
-                                            pc        |->  "End_U",
-                                            p_        |->  p_ ] >>
-                                        \o stack
-                        /\ pc' = "Start_"
-                        /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, 
-                                        p_E, c_, saved_pc_E, func_, p_Ex, 
-                                        saved_pc_Ex, func, p_U, c_U, 
-                                        saved_pc_U, p_Uo, c_Uo, o_, 
-                                        saved_pc_Uo, p_Uob, c_Uob, o_U, 
-                                        saved_pc_Uob, cfunc_finished, in_cfunc, 
-                                        p_Uobj, c, o, saved_pc_Uobj, 
-                                        casmfunc_finished, in_casmfunc, 
-                                        p_Uobje, saved_pc, p >>
+A == /\ pc[2] = "A"
+     /\ /\ p_C' = [p_C EXCEPT ![2] = 2]
+        /\ stack' = [stack EXCEPT ![2] = << [ procedure |->  "Cpu_process",
+                                              pc        |->  "Done",
+                                              p_C       |->  p_C[2] ] >>
+                                          \o stack[2]]
+     /\ pc' = [pc EXCEPT ![2] = "Start_C"]
+     /\ UNCHANGED << cpu, Cpu, memory, cfi, call_stack, p_, p_L, saved_pc_, 
+                     p_E, c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
+                     c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
+                     Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
+                     cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
+                     casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
 
-End_U == /\ pc = "End_U"
-         /\ pc' = Head(stack).pc
-         /\ In_uobj' = Head(stack).In_uobj
-         /\ Uobj_finished' = Head(stack).Uobj_finished
-         /\ p_Uo' = Head(stack).p_Uo
-         /\ c_Uo' = Head(stack).c_Uo
-         /\ o_' = Head(stack).o_
-         /\ saved_pc_Uo' = Head(stack).saved_pc_Uo
-         /\ stack' = Tail(stack)
-         /\ UNCHANGED << cpu, Cpu, memory, cfi, p_, p_C, p_L, saved_pc_, p_E, 
-                         c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                         c_U, saved_pc_U, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                         cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                         casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
-
-Uobject_code == Start_Uo \/ Loop_U \/ Uobj_finished_assign \/ End_U
-
-Start_Uob == /\ pc = "Start_Uob"
-             /\ IF ~in_cfunc
-                   THEN /\ Cpu' = [Cpu EXCEPT ![p_Uob].Pc = UBER]
-                        /\ /\ p_' = p_Uob
-                           /\ stack' = << [ procedure |->  "CFI_observer",
-                                            pc        |->  "Loop_Uo",
-                                            p_        |->  p_ ] >>
-                                        \o stack
-                        /\ pc' = "Start_"
-                   ELSE /\ pc' = "Cfunc_finished_assign"
-                        /\ UNCHANGED << Cpu, stack, p_ >>
-             /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                             saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                             c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                             In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                             saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, 
-                             o, saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                             p_Uobje, saved_pc, p >>
-
-Loop_Uo == /\ pc = "Loop_Uo"
-           /\ IF ~cfunc_finished
-                 THEN /\ \/ /\ /\ c_Uob' = c_Uob
-                               /\ o_U' = o_U
-                               /\ p_Uob' = p_Uob
-                               /\ saved_pc_Uob' = UBER
-                               /\ stack' = << [ procedure |->  "Uobject_code_c_func",
-                                                pc        |->  "Loop_Uo",
-                                                cfunc_finished |->  cfunc_finished,
-                                                in_cfunc  |->  in_cfunc,
-                                                p_Uob     |->  p_Uob,
-                                                c_Uob     |->  c_Uob,
-                                                o_U       |->  o_U,
-                                                saved_pc_Uob |->  saved_pc_Uob ] >>
-                                            \o stack
-                            /\ cfunc_finished' = FALSE
-                            /\ in_cfunc' = FALSE
-                            /\ pc' = "Start_Uob"
-                            /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                         \/ /\ /\ c' = c_Uob
-                               /\ o' = o_U
-                               /\ p_Uobj' = p_Uob
-                               /\ saved_pc_Uobj' = UBER
-                               /\ stack' = << [ procedure |->  "Uobject_code_casm_func",
-                                                pc        |->  "Loop_Uo",
-                                                casmfunc_finished |->  casmfunc_finished,
-                                                in_casmfunc |->  in_casmfunc,
-                                                p_Uobj    |->  p_Uobj,
-                                                c         |->  c,
-                                                o         |->  o,
-                                                saved_pc_Uobj |->  saved_pc_Uobj ] >>
-                                            \o stack
-                            /\ casmfunc_finished' = FALSE
-                            /\ in_casmfunc' = FALSE
-                            /\ pc' = "Start_Uobj"
-                            /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc>>
-                         \/ /\ /\ func' = TRUE
-                               /\ p_Ex' = p_Uob
-                               /\ saved_pc_Ex' = UBER
-                               /\ stack' = << [ procedure |->  "Exit_sentinel",
-                                                pc        |->  "Loop_Uo",
-                                                p_Ex      |->  p_Ex,
-                                                saved_pc_Ex |->  saved_pc_Ex,
-                                                func      |->  func ] >>
-                                            \o stack
-                            /\ pc' = "Start_Ex"
-                            /\ UNCHANGED <<Cpu, memory, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                         \/ /\ Cpu' = [Cpu EXCEPT ![p_Uob].Res_cpustate[c_Uob][o_U] = 100*c_Uob + o_U]
-                            /\ pc' = "Loop_Uo"
-                            /\ UNCHANGED <<memory, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                         \/ /\ memory' = [memory EXCEPT !.Mem_uobjcollection[c_Uob].memuobj[o_U].Mem = 100*c_Uob + o_U]
-                            /\ pc' = "Loop_Uo"
-                            /\ UNCHANGED <<Cpu, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                         \/ /\ cfunc_finished' = TRUE
-                            /\ pc' = "Loop_Uo"
-                            /\ UNCHANGED <<Cpu, memory, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                 ELSE /\ pc' = "Cfunc_finished_assign"
-                      /\ UNCHANGED << Cpu, memory, stack, p_Ex, saved_pc_Ex, 
-                                      func, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                                      cfunc_finished, in_cfunc, p_Uobj, c, o, 
-                                      saved_pc_Uobj, casmfunc_finished, 
-                                      in_casmfunc >>
-           /\ UNCHANGED << cpu, cfi, p_, p_C, p_L, saved_pc_, p_E, c_, 
-                           saved_pc_E, func_, p_U, c_U, saved_pc_U, p_Uo, c_Uo, 
-                           o_, saved_pc_Uo, In_uobj, Uobj_finished, p_Uobje, 
-                           saved_pc, p >>
-
-Cfunc_finished_assign == /\ pc = "Cfunc_finished_assign"
-                         /\ cfunc_finished' = FALSE
-                         /\ in_cfunc' = FALSE
-                         /\ Cpu' = [Cpu EXCEPT ![p_Uob].Pc = saved_pc_Uob]
-                         /\ /\ p_' = p_Uob
-                            /\ stack' = << [ procedure |->  "CFI_observer",
-                                             pc        |->  "End_Uo",
-                                             p_        |->  p_ ] >>
-                                         \o stack
-                         /\ pc' = "Start_"
-                         /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, 
-                                         p_E, c_, saved_pc_E, func_, p_Ex, 
-                                         saved_pc_Ex, func, p_U, c_U, 
-                                         saved_pc_U, p_Uo, c_Uo, o_, 
-                                         saved_pc_Uo, In_uobj, Uobj_finished, 
-                                         p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                                         p_Uobj, c, o, saved_pc_Uobj, 
-                                         casmfunc_finished, in_casmfunc, 
-                                         p_Uobje, saved_pc, p >>
-
-End_Uo == /\ pc = "End_Uo"
-          /\ pc' = Head(stack).pc
-          /\ cfunc_finished' = Head(stack).cfunc_finished
-          /\ in_cfunc' = Head(stack).in_cfunc
-          /\ p_Uob' = Head(stack).p_Uob
-          /\ c_Uob' = Head(stack).c_Uob
-          /\ o_U' = Head(stack).o_U
-          /\ saved_pc_Uob' = Head(stack).saved_pc_Uob
-          /\ stack' = Tail(stack)
-          /\ UNCHANGED << cpu, Cpu, memory, cfi, p_, p_C, p_L, saved_pc_, p_E, 
-                          c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                          c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                          In_uobj, Uobj_finished, p_Uobj, c, o, saved_pc_Uobj, 
-                          casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
-
-Uobject_code_c_func == Start_Uob \/ Loop_Uo \/ Cfunc_finished_assign
-                          \/ End_Uo
-
-Start_Uobj == /\ pc = "Start_Uobj"
-              /\ IF ~in_casmfunc
-                    THEN /\ Cpu' = [Cpu EXCEPT ![p_Uobj].Pc = UBER]
-                         /\ /\ p_' = p_Uobj
-                            /\ stack' = << [ procedure |->  "CFI_observer",
-                                             pc        |->  "Loop_Uob",
-                                             p_        |->  p_ ] >>
-                                         \o stack
-                         /\ pc' = "Start_"
-                    ELSE /\ pc' = "End_Uob"
-                         /\ UNCHANGED << Cpu, stack, p_ >>
-              /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                              saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                              c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                              In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                              saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, 
-                              c, o, saved_pc_Uobj, casmfunc_finished, 
-                              in_casmfunc, p_Uobje, saved_pc, p >>
-
-Loop_Uob == /\ pc = "Loop_Uob"
-            /\ IF ~casmfunc_finished
-                  THEN /\ \/ /\ /\ c_Uob' = c
-                                /\ o_U' = o
-                                /\ p_Uob' = p_Uobj
-                                /\ saved_pc_Uob' = UBER
-                                /\ stack' = << [ procedure |->  "Uobject_code_c_func",
-                                                 pc        |->  "Loop_Uob",
-                                                 cfunc_finished |->  cfunc_finished,
-                                                 in_cfunc  |->  in_cfunc,
-                                                 p_Uob     |->  p_Uob,
-                                                 c_Uob     |->  c_Uob,
-                                                 o_U       |->  o_U,
-                                                 saved_pc_Uob |->  saved_pc_Uob ] >>
-                                             \o stack
-                             /\ cfunc_finished' = FALSE
-                             /\ in_cfunc' = FALSE
-                             /\ pc' = "Start_Uob"
-                             /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                          \/ /\ /\ c' = c
-                                /\ o' = o
-                                /\ p_Uobj' = p_Uobj
-                                /\ saved_pc_Uobj' = UBER
-                                /\ stack' = << [ procedure |->  "Uobject_code_casm_func",
-                                                 pc        |->  "Loop_Uob",
-                                                 casmfunc_finished |->  casmfunc_finished,
-                                                 in_casmfunc |->  in_casmfunc,
-                                                 p_Uobj    |->  p_Uobj,
-                                                 c         |->  c,
-                                                 o         |->  o,
-                                                 saved_pc_Uobj |->  saved_pc_Uobj ] >>
-                                             \o stack
-                             /\ casmfunc_finished' = FALSE
-                             /\ in_casmfunc' = FALSE
-                             /\ pc' = "Start_Uobj"
-                             /\ UNCHANGED <<Cpu, memory, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc>>
-                          \/ /\ /\ func' = TRUE
-                                /\ p_Ex' = p_Uobj
-                                /\ saved_pc_Ex' = UBER
-                                /\ stack' = << [ procedure |->  "Exit_sentinel",
-                                                 pc        |->  "Loop_Uob",
-                                                 p_Ex      |->  p_Ex,
-                                                 saved_pc_Ex |->  saved_pc_Ex,
-                                                 func      |->  func ] >>
-                                             \o stack
-                             /\ pc' = "Start_Ex"
-                             /\ UNCHANGED <<Cpu, memory, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                          \/ /\ Cpu' = [Cpu EXCEPT ![p_Uobj].Res_cpustate[c][o] = 100*c + o]
-                             /\ pc' = "Loop_Uob"
-                             /\ UNCHANGED <<memory, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                          \/ /\ memory' = [memory EXCEPT !.Mem_uobjcollection[c].memuobj[o].Mem = 100*c + o]
-                             /\ pc' = "Loop_Uob"
-                             /\ UNCHANGED <<Cpu, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
-                          \/ /\ casmfunc_finished' = TRUE
-                             /\ pc' = "Loop_Uob"
-                             /\ UNCHANGED <<Cpu, memory, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, in_casmfunc>>
-                       /\ p_' = p_
-                  ELSE /\ casmfunc_finished' = FALSE
-                       /\ in_casmfunc' = FALSE
-                       /\ Cpu' = [Cpu EXCEPT ![p_Uobj].Pc = saved_pc_Uobj]
-                       /\ /\ p_' = p_Uobj
-                          /\ stack' = << [ procedure |->  "CFI_observer",
-                                           pc        |->  "End_Uob",
-                                           p_        |->  p_ ] >>
-                                       \o stack
-                       /\ pc' = "Start_"
-                       /\ UNCHANGED << memory, p_Ex, saved_pc_Ex, func, p_Uob, 
-                                       c_Uob, o_U, saved_pc_Uob, 
-                                       cfunc_finished, in_cfunc, p_Uobj, c, o, 
-                                       saved_pc_Uobj >>
-            /\ UNCHANGED << cpu, cfi, p_C, p_L, saved_pc_, p_E, c_, saved_pc_E, 
-                            func_, p_U, c_U, saved_pc_U, p_Uo, c_Uo, o_, 
-                            saved_pc_Uo, In_uobj, Uobj_finished, p_Uobje, 
-                            saved_pc, p >>
-
-End_Uob == /\ pc = "End_Uob"
-           /\ pc' = Head(stack).pc
-           /\ casmfunc_finished' = Head(stack).casmfunc_finished
-           /\ in_casmfunc' = Head(stack).in_casmfunc
-           /\ p_Uobj' = Head(stack).p_Uobj
-           /\ c' = Head(stack).c
-           /\ o' = Head(stack).o
-           /\ saved_pc_Uobj' = Head(stack).saved_pc_Uobj
-           /\ stack' = Tail(stack)
-           /\ UNCHANGED << cpu, Cpu, memory, cfi, p_, p_C, p_L, saved_pc_, p_E, 
-                           c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                           c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                           In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                           saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobje, 
-                           saved_pc, p >>
-
-Uobject_code_casm_func == Start_Uobj \/ Loop_Uob \/ End_Uob
-
-Start == /\ pc = "Start"
-         /\ Cpu' = [Cpu EXCEPT ![p_Uobje].Pc = LEGACY]
-         /\ /\ p_' = p_Uobje
-            /\ stack' = << [ procedure |->  "CFI_observer",
-                             pc        |->  "End",
-                             p_        |->  p_ ] >>
-                         \o stack
-         /\ pc' = "Start_"
-         /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                         saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, 
-                         saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                         Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                         cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                         casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
-
-End == /\ pc = "End"
-       /\ Cpu' = [Cpu EXCEPT ![p_Uobje].Pc = saved_pc]
-       /\ /\ p_' = p_Uobje
-          /\ stack' = << [ procedure |->  "CFI_observer",
-                           pc        |->  Head(stack).pc,
-                           p_        |->  p_ ] >>
-                       \o Tail(stack)
-       /\ pc' = "Start_"
-       /\ UNCHANGED << cpu, memory, cfi, p_C, p_L, saved_pc_, p_E, c_, 
-                       saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, 
-                       saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                       Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                       cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                       casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
-
-Uobject_code_legacy_func == Start \/ End
-
-Loop_d == /\ pc = "Loop_d"
-          /\ \/ /\ TRUE
-                /\ pc' = "Loop_d"
-                /\ UNCHANGED <<stack, p>>
-             \/ /\ TRUE
-                /\ pc' = "Loop_d"
-                /\ UNCHANGED <<stack, p>>
-             \/ /\ pc' = Head(stack).pc
-                /\ p' = Head(stack).p
-                /\ stack' = Tail(stack)
-          /\ UNCHANGED << cpu, Cpu, memory, cfi, p_, p_C, p_L, saved_pc_, p_E, 
-                          c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                          c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, 
-                          In_uobj, Uobj_finished, p_Uob, c_Uob, o_U, 
-                          saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, 
-                          saved_pc_Uobj, casmfunc_finished, in_casmfunc, 
-                          p_Uobje, saved_pc >>
-
-device_process == Loop_d
-
-Loop == /\ pc = "Loop"
-        /\ IF cpu > 0
-              THEN /\ /\ p_C' = cpu
-                      /\ stack' = << [ procedure |->  "Cpu_process",
-                                       pc        |->  "Dec",
-                                       p_C       |->  p_C ] >>
-                                   \o stack
-                   /\ pc' = "Start_C"
-              ELSE /\ pc' = "Done"
-                   /\ UNCHANGED << stack, p_C >>
-        /\ UNCHANGED << cpu, Cpu, memory, cfi, p_, p_L, saved_pc_, p_E, c_, 
-                        saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, c_U, 
-                        saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                        Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                        cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                        casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
-
-Dec == /\ pc = "Dec"
-       /\ cpu' = cpu - 1
-       /\ pc' = "Loop"
-       /\ UNCHANGED << Cpu, memory, cfi, stack, p_, p_C, p_L, saved_pc_, p_E, 
-                       c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
-                       c_U, saved_pc_U, p_Uo, c_Uo, o_, saved_pc_Uo, In_uobj, 
-                       Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, 
-                       cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, 
-                       casmfunc_finished, in_casmfunc, p_Uobje, saved_pc, p >>
+two == A
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
-Terminating == pc = "Done" /\ UNCHANGED vars
+Terminating == /\ \A self \in ProcSet: pc[self] = "Done"
+               /\ UNCHANGED vars
 
-Next == CFI_observer \/ Cpu_process \/ Legacy_code \/ Entry_sentinel
-           \/ Exit_sentinel \/ Uobjcollection_code \/ Uobject_code
-           \/ Uobject_code_c_func \/ Uobject_code_casm_func
-           \/ Uobject_code_legacy_func \/ device_process \/ Loop \/ Dec
+Next == one \/ two
+           \/ (\E self \in ProcSet:  \/ CFI_observer(self) \/ Cpu_process(self)
+                                     \/ Legacy_code(self) \/ Entry_sentinel(self)
+                                     \/ Exit_sentinel(self)
+                                     \/ Uobjcollection_code(self)
+                                     \/ Uobject_code(self)
+                                     \/ Uobject_code_c_func(self)
+                                     \/ Uobject_code_casm_func(self)
+                                     \/ Uobject_code_legacy_func(self)
+                                     \/ device_process(self))
            \/ Terminating
 
 Spec == Init /\ [][Next]_vars
 
-Termination == <>(pc = "Done")
+Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 \* END TRANSLATION - the hash of the generated TLA code (remove to silence divergence warnings): TLA-63c4cffedd1e5dec5d2801f5f7bebd11
 
@@ -1202,8 +1375,16 @@ MS == \A col \in 1..MAXUOBJCOLLECTIONS: \A obj \in 1..MAXUOBJSWITHINCOLLECTION:
                     memory.Mem_legacy /= 100*col + obj /\
                     TRUE
 CFI == cfi = TRUE
+    
+THEOREM MemIntegrity == Init => MI
+    BY DEF Init, MI
+THEOREM MemSafety == Init => MS
+    BY DEF Init, MS
+THEOREM ControlFlowIntegrity == Init => CFI
+    BY DEF Init, CFI
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Jan 21 08:29:04 PST 2021 by mjmccall
+\* Last modified Thu Mar 04 12:23:22 PST 2021 by uber
+\* Last modified Mon Feb 08 06:45:36 PST 2021 by mjmccall
 \* Created Wed Jan 20 09:49:35 PST 2021 by mjmccall
