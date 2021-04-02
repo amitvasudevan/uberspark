@@ -28,6 +28,10 @@ variables cpu = MAXCPUS, \* for test iterating through CPUs
               Mem_uobjcollection |-> [co \in 1..MAXUOBJCOLLECTIONS |->
                 [memuobj |-> [ob \in 1..MAXUOBJSWITHINCOLLECTION |->
                    [Mem |-> 0]
+                   
+                   (* Section 1.6: memory safety: invariant 1 *)
+                   char uobj_local_data;
+                  
                   ]
                 ]
               ]
@@ -171,6 +175,10 @@ end procedure;
 procedure Uobject_code(p, c, o, saved_pc)
     variables In_uobj = FALSE,
         Uobj_finished = FALSE; 
+        
+        (* Section 1.6: memory safety: invariant 1 *)
+        char tmp_local_data;
+    
     begin
 Start:
     if ~In_uobj then
@@ -197,7 +205,18 @@ Loop:
                 Cpu[p].Res_cpustate[c][o] := 100*c + o;                     \* Access the CPU state reserved to this object
             or 
                 memory.Mem_uobjcollection[c].memuobj[o].Mem := 100*c + o;   \* Access this object's allocated memory
+            
             or 
+            
+                (* Section 1.6: memory safety: invariant 1 *)
+                memory.Mem_uobjcollection[c].memuobj[o].uobj_local_data := 0;   \* access uobjects local_data for write
+            
+            or
+            
+                (* Section 1.6: memory safety: invariant 1 *)
+                tmp_local_data = memory.Mem_uobjcollection[c].memuobj[o].uobj_local_data;   \* access uobjects local_data for read
+            
+            or
                 Uobj_finished := TRUE;
             end either;
         end while;
