@@ -27,11 +27,9 @@ variables cpu = MAXCPUS, \* for test iterating through CPUs
               Mem_global |-> 0, 
               Mem_uobjcollection |-> [co \in 1..MAXUOBJCOLLECTIONS |->
                 [memuobj |-> [ob \in 1..MAXUOBJSWITHINCOLLECTION |->
-                   [Mem |-> 0]
-                   
-                   (* Section 1.6: memory safety: invariant 1 *)
-                   char uobj_local_data;
-                  
+                   [Mem |-> 0,
+                    (* Section 1.6: memory safety: invariant 1 *)
+                    uobj_local_data |-> 0]
                   ]
                 ]
               ]
@@ -177,8 +175,9 @@ procedure Uobject_code(p, c, o, saved_pc)
         Uobj_finished = FALSE; 
         
         (* Section 1.6: memory safety: invariant 1 *)
-        char tmp_local_data;
-    
+        \* char tmp_local_data;
+        \* declared in memory above
+        
     begin
 Start:
     if ~In_uobj then
@@ -209,13 +208,13 @@ Loop:
             or 
             
                 (* Section 1.6: memory safety: invariant 1 *)
-                memory.Mem_uobjcollection[c].memuobj[o].uobj_local_data := 0;   \* access uobjects local_data for write
-            
+                \*memory.Mem_uobjcollection[c].memuobj[o].uobj_local_data := 0;   \* access uobjects local_data for write
+                memory.Mem_uobjcollection[c].memuobj[o].uobj_local_data := 100*c + o; \* read and write currently represented the same
             or
             
                 (* Section 1.6: memory safety: invariant 1 *)
-                tmp_local_data = memory.Mem_uobjcollection[c].memuobj[o].uobj_local_data;   \* access uobjects local_data for read
-            
+                \*tmp_local_data = memory.Mem_uobjcollection[c].memuobj[o].uobj_local_data;   \* access uobjects local_data for read
+                skip;
             or
                 Uobj_finished := TRUE;
             end either;
@@ -355,50 +354,50 @@ end process;
 
 end algorithm *)
 \* BEGIN TRANSLATION - the hash of the PCal code: PCal-7c5b65bfe537008e0cf5632193526bb0
-\* Label Start of procedure CFI_observer at line 123 col 5 changed to Start_
-\* Label Start of procedure Cpu_process at line 136 col 5 changed to Start_C
-\* Label Call of procedure Cpu_process at line 139 col 9 changed to Call_
-\* Label Start of procedure Legacy_code at line 157 col 5 changed to Start_L
-\* Label Loop of procedure Legacy_code at line 160 col 5 changed to Loop_
-\* Label Start of procedure Entry_sentinel at line 188 col 5 changed to Start_E
-\* Label End of procedure Entry_sentinel at line 199 col 5 changed to End_
-\* Label Start of procedure Exit_sentinel at line 210 col 5 changed to Start_Ex
-\* Label End of procedure Exit_sentinel at line 220 col 5 changed to End_E
-\* Label Start of procedure Uobjcollection_code at line 231 col 5 changed to Start_U
-\* Label Start of procedure Uobject_code at line 252 col 5 changed to Start_Uo
-\* Label Loop of procedure Uobject_code at line 256 col 9 changed to Loop_U
-\* Label End of procedure Uobject_code at line 287 col 5 changed to End_U
-\* Label Start of procedure Uobject_code_c_func at line 294 col 5 changed to Start_Uob
-\* Label Loop of procedure Uobject_code_c_func at line 298 col 9 changed to Loop_Uo
-\* Label End of procedure Uobject_code_c_func at line 331 col 5 changed to End_Uo
-\* Label Start of procedure Uobject_code_casm_func at line 338 col 5 changed to Start_Uobj
-\* Label Loop of procedure Uobject_code_casm_func at line 342 col 9 changed to Loop_Uob
-\* Label End of procedure Uobject_code_casm_func at line 372 col 5 changed to End_Uob
-\* Label A of process one at line 403 col 5 changed to A_
-\* Parameter p of procedure CFI_observer at line 121 col 24 changed to p_
-\* Parameter p of procedure Cpu_process at line 134 col 23 changed to p_C
-\* Parameter p of procedure Legacy_code at line 155 col 23 changed to p_L
-\* Parameter saved_pc of procedure Legacy_code at line 155 col 26 changed to saved_pc_
-\* Parameter p of procedure Entry_sentinel at line 186 col 26 changed to p_E
-\* Parameter c of procedure Entry_sentinel at line 186 col 29 changed to c_
-\* Parameter saved_pc of procedure Entry_sentinel at line 186 col 32 changed to saved_pc_E
-\* Parameter func of procedure Entry_sentinel at line 186 col 42 changed to func_
-\* Parameter p of procedure Exit_sentinel at line 208 col 25 changed to p_Ex
-\* Parameter saved_pc of procedure Exit_sentinel at line 208 col 28 changed to saved_pc_Ex
-\* Parameter p of procedure Uobjcollection_code at line 229 col 31 changed to p_U
-\* Parameter c of procedure Uobjcollection_code at line 229 col 34 changed to c_U
-\* Parameter saved_pc of procedure Uobjcollection_code at line 229 col 37 changed to saved_pc_U
-\* Parameter p of procedure Uobject_code at line 247 col 24 changed to p_Uo
-\* Parameter c of procedure Uobject_code at line 247 col 27 changed to c_Uo
-\* Parameter o of procedure Uobject_code at line 247 col 30 changed to o_
-\* Parameter saved_pc of procedure Uobject_code at line 247 col 33 changed to saved_pc_Uo
-\* Parameter p of procedure Uobject_code_c_func at line 290 col 31 changed to p_Uob
-\* Parameter c of procedure Uobject_code_c_func at line 290 col 34 changed to c_Uob
-\* Parameter o of procedure Uobject_code_c_func at line 290 col 37 changed to o_U
-\* Parameter saved_pc of procedure Uobject_code_c_func at line 290 col 40 changed to saved_pc_Uob
-\* Parameter p of procedure Uobject_code_casm_func at line 334 col 34 changed to p_Uobj
-\* Parameter saved_pc of procedure Uobject_code_casm_func at line 334 col 43 changed to saved_pc_Uobj
-\* Parameter p of procedure Uobject_code_legacy_func at line 375 col 36 changed to p_Uobje
+\* Label Start of procedure CFI_observer at line 49 col 5 changed to Start_
+\* Label Start of procedure Cpu_process at line 62 col 5 changed to Start_C
+\* Label Call of procedure Cpu_process at line 65 col 9 changed to Call_
+\* Label Start of procedure Legacy_code at line 83 col 5 changed to Start_L
+\* Label Loop of procedure Legacy_code at line 86 col 5 changed to Loop_
+\* Label Start of procedure Entry_sentinel at line 114 col 5 changed to Start_E
+\* Label End of procedure Entry_sentinel at line 125 col 5 changed to End_
+\* Label Start of procedure Exit_sentinel at line 136 col 5 changed to Start_Ex
+\* Label End of procedure Exit_sentinel at line 146 col 5 changed to End_E
+\* Label Start of procedure Uobjcollection_code at line 157 col 5 changed to Start_U
+\* Label Start of procedure Uobject_code at line 183 col 5 changed to Start_Uo
+\* Label Loop of procedure Uobject_code at line 187 col 9 changed to Loop_U
+\* Label End of procedure Uobject_code at line 229 col 5 changed to End_U
+\* Label Start of procedure Uobject_code_c_func at line 236 col 5 changed to Start_Uob
+\* Label Loop of procedure Uobject_code_c_func at line 240 col 9 changed to Loop_Uo
+\* Label End of procedure Uobject_code_c_func at line 273 col 5 changed to End_Uo
+\* Label Start of procedure Uobject_code_casm_func at line 280 col 5 changed to Start_Uobj
+\* Label Loop of procedure Uobject_code_casm_func at line 284 col 9 changed to Loop_Uob
+\* Label End of procedure Uobject_code_casm_func at line 314 col 5 changed to End_Uob
+\* Label A of process one at line 345 col 5 changed to A_
+\* Parameter p of procedure CFI_observer at line 47 col 24 changed to p_
+\* Parameter p of procedure Cpu_process at line 60 col 23 changed to p_C
+\* Parameter p of procedure Legacy_code at line 81 col 23 changed to p_L
+\* Parameter saved_pc of procedure Legacy_code at line 81 col 26 changed to saved_pc_
+\* Parameter p of procedure Entry_sentinel at line 112 col 26 changed to p_E
+\* Parameter c of procedure Entry_sentinel at line 112 col 29 changed to c_
+\* Parameter saved_pc of procedure Entry_sentinel at line 112 col 32 changed to saved_pc_E
+\* Parameter func of procedure Entry_sentinel at line 112 col 42 changed to func_
+\* Parameter p of procedure Exit_sentinel at line 134 col 25 changed to p_Ex
+\* Parameter saved_pc of procedure Exit_sentinel at line 134 col 28 changed to saved_pc_Ex
+\* Parameter p of procedure Uobjcollection_code at line 155 col 31 changed to p_U
+\* Parameter c of procedure Uobjcollection_code at line 155 col 34 changed to c_U
+\* Parameter saved_pc of procedure Uobjcollection_code at line 155 col 37 changed to saved_pc_U
+\* Parameter p of procedure Uobject_code at line 173 col 24 changed to p_Uo
+\* Parameter c of procedure Uobject_code at line 173 col 27 changed to c_Uo
+\* Parameter o of procedure Uobject_code at line 173 col 30 changed to o_
+\* Parameter saved_pc of procedure Uobject_code at line 173 col 33 changed to saved_pc_Uo
+\* Parameter p of procedure Uobject_code_c_func at line 232 col 31 changed to p_Uob
+\* Parameter c of procedure Uobject_code_c_func at line 232 col 34 changed to c_Uob
+\* Parameter o of procedure Uobject_code_c_func at line 232 col 37 changed to o_U
+\* Parameter saved_pc of procedure Uobject_code_c_func at line 232 col 40 changed to saved_pc_Uob
+\* Parameter p of procedure Uobject_code_casm_func at line 276 col 34 changed to p_Uobj
+\* Parameter saved_pc of procedure Uobject_code_casm_func at line 276 col 43 changed to saved_pc_Uobj
+\* Parameter p of procedure Uobject_code_legacy_func at line 317 col 36 changed to p_Uobje
 CONSTANT defaultInitValue
 VARIABLES cpu, Cpu, memory, cfi, call_stack, pc, stack, p_, p_C, p_L, 
           saved_pc_, p_E, c_, saved_pc_E, func_, p_Ex, saved_pc_Ex, func, p_U, 
@@ -434,7 +433,9 @@ Init == (* Global variables *)
                      Mem_global |-> 0,
                      Mem_uobjcollection |-> [co \in 1..MAXUOBJCOLLECTIONS |->
                        [memuobj |-> [ob \in 1..MAXUOBJSWITHINCOLLECTION |->
-                          [Mem |-> 0]
+                          [Mem |-> 0,
+                    
+                           uobj_local_data |-> 0]
                          ]
                        ]
                      ]
@@ -922,6 +923,12 @@ Loop_U(self) == /\ pc[self] = "Loop_U"
                               \/ /\ memory' = [memory EXCEPT !.Mem_uobjcollection[c_Uo[self]].memuobj[o_[self]].Mem = 100*c_Uo[self] + o_[self]]
                                  /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
                                  /\ UNCHANGED <<Cpu, call_stack, stack, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                              \/ /\ memory' = [memory EXCEPT !.Mem_uobjcollection[c_Uo[self]].memuobj[o_[self]].uobj_local_data = 100*c_Uo[self] + o_[self]]
+                                 /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
+                                 /\ UNCHANGED <<Cpu, call_stack, stack, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
+                              \/ /\ TRUE
+                                 /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
+                                 /\ UNCHANGED <<Cpu, memory, call_stack, stack, p_Ex, saved_pc_Ex, func, Uobj_finished, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
                               \/ /\ Uobj_finished' = [Uobj_finished EXCEPT ![self] = TRUE]
                                  /\ pc' = [pc EXCEPT ![self] = "Loop_U"]
                                  /\ UNCHANGED <<Cpu, memory, call_stack, stack, p_Ex, saved_pc_Ex, func, p_Uob, c_Uob, o_U, saved_pc_Uob, cfunc_finished, in_cfunc, p_Uobj, c, o, saved_pc_Uobj, casmfunc_finished, in_casmfunc>>
@@ -1389,21 +1396,20 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 MI == \A col \in 1..MAXUOBJCOLLECTIONS: \A obj \in 1..MAXUOBJSWITHINCOLLECTION: 
                     memory.Mem_uobjcollection[col].memuobj[obj].Mem = 100*col + obj \/
                     memory.Mem_uobjcollection[col].memuobj[obj].Mem = 0
+
+                    
 (* Memory safety follows from MI + all other memory contains no access by uberObjects *)
 MS == \A col \in 1..MAXUOBJCOLLECTIONS: \A obj \in 1..MAXUOBJSWITHINCOLLECTION:
                     memory.Mem_legacy /= 100*col + obj /\
                     TRUE
+                    
+uprog_inv1 == \A col \in 1..MAXUOBJCOLLECTIONS: \A obj \in 1..MAXUOBJSWITHINCOLLECTION:
+                    memory.Mem_legacy /= 100*col + obj /\
+                    TRUE \* No memory access outside of a uObject's uobj_local_data
 CFI == cfi = TRUE
-    
-THEOREM MemIntegrity == Init => MI
-    BY DEF Init, MI
-THEOREM MemSafety == Init => MS
-    BY DEF Init, MS
-THEOREM ControlFlowIntegrity == Init => CFI
-    BY DEF Init, CFI
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Mar 04 12:23:22 PST 2021 by uber
+\* Last modified Tue Apr 06 08:57:23 PDT 2021 by uber
 \* Last modified Mon Feb 08 06:45:36 PST 2021 by mjmccall
 \* Created Wed Jan 20 09:49:35 PST 2021 by mjmccall
