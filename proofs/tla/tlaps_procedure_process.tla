@@ -158,6 +158,23 @@ TypeOK == /\ priority \in 0..2
 Inv == property /\ TypeOK
 
 
+THEOREM obv == (/\ pc[1] = "Call_"
+         /\ /\ p' = [p EXCEPT ![1] = 1]
+            /\ stack'
+                 = [stack EXCEPT
+                      ![1] = <<[procedure |-> "Cpu_process", pc |-> "Done",
+                                p |-> p[1]]>>
+                             \o stack[1]]
+         /\ pc' = [pc EXCEPT ![1] = "Start"]
+         /\ UNCHANGED priority) =>
+        stack'
+        = [stack EXCEPT
+            ![1] = <<[procedure |-> "Cpu_process", pc |-> "Done", p |-> p[1]]>>
+                   \o stack[1]]
+<1> QED OBVIOUS
+
+
+
 THEOREM Spec => []property
 <1>1. Init => Inv
   <2>1. SUFFICES ASSUME Init PROVE Inv
@@ -288,23 +305,35 @@ THEOREM Spec => []property
                     /\ stack[i][1].pc = "Done"
                     /\ stack[i][1].procedure = "Cpu_process"
                     /\ stack[i][1].p \in 1..2 \cup {defaultInitValue})'
-        <5>1. CASE pc[1] = "Call_"
+        <5>1. CASE Call_\*pc[1] = "Call_" \*/\ pc[2] # "Call"
           <6>1. Len(stack[1]) = 0 /\ stack[1] = <<>>
-            BY <2>1, <5>1 DEF Inv, TypeOK, ProcSet
+            BY <2>1, <5>1 DEF Inv, TypeOK, ProcSet, Call_
           <6>a. Len(<<[procedure |-> "Cpu_process", pc |-> "Done",
                                 p |-> p[1]]>>
                              \o stack[1]) = 1
             BY <6>1
-          <6>b. (stack[1] = <<[procedure |-> "Cpu_process", pc |-> "Done",
+          (*<6>b. (stack[1] = <<[procedure |-> "Cpu_process", pc |-> "Done",
                                 p |-> p[1]]>>
                              \o stack[1])'
-            BY <2>1, <3>2, <5>1, <6>1 DEF Call_, Inv, TypeOK, ProcSet 
-          <6>c. stack' = [stack EXCEPT ![1] = <<[procedure |-> "Cpu_process", pc |-> "Done",
+            BY <2>1, <3>2, <5>1, <6>1 DEF Call_, Inv, TypeOK, ProcSet*) 
+          <6>c. stack'
+                 = [stack EXCEPT
+                      ![1] = <<[procedure |-> "Cpu_process", pc |-> "Done",
                                 p |-> p[1]]>>
                              \o stack[1]]
-            BY <2>1, <3>2, <5>1, <6>1 DEF Call, Call_, Inv, TypeOK, ProcSet      
+            BY <2>1, <3>2, <5>1, <6>1, obv DEF Call_, Inv, TypeOK, ProcSet      
+          <6>d. (/\ pc[1] = "Call_"
+                 /\ /\ p' = [p EXCEPT ![1] = 1]
+                    /\ stack'
+                       = [stack EXCEPT
+                            ![1] = <<[procedure |-> "Cpu_process", pc |-> "Done",
+                                      p |-> p[1]]>>
+                                   \o stack[1]]
+                 /\ pc' = [pc EXCEPT ![1] = "Start"]
+                 /\ UNCHANGED priority)
+            BY <2>1, <3>2, <5>1 DEF Call_, Call
           <6>2. (Len(stack[1]))' = 1
-            BY <2>1, <3>2, <5>1, <6>1 DEF Call_, Inv, TypeOK, ProcSet
+            BY <2>1, <3>2, <5>1, <6>1, <6>a DEF Call_, Inv, TypeOK, ProcSet
           <6>3. (stack[1][1].pc)' = "Done"
             BY <2>1, <3>2, <5>1, <6>1 DEF Call_, Inv, TypeOK, ProcSet
           <6>4. stack[1][1].procedure' = "Cpu_process"
@@ -315,17 +344,19 @@ THEOREM Spec => []property
           \*p[1] \in 1..2 \cup {defaultInitValue},
           \*(Len(stack[1]))' = 1
            DEF Call_, Inv, TypeOK, ProcSet
-        <5>2. CASE pc[2] = "Call"
-          <6>1. Len(stack[2]) = 0
-            BY <2>1, <5>2 DEF Inv, TypeOK, ProcSet
+        <5>2. CASE Call\*pc[2] = "Call" \*/\ pc[1] # "Call_"
+          <6>1. Len(stack[2]) = 0 /\ stack[2] = <<>>
+            BY <2>1, <5>2 DEF Inv, TypeOK, ProcSet, Call
+          <6>2. (Len(stack[2]))' = 1
+            BY <2>1, <3>2, <5>2, <6>1 DEF Call, Inv, TypeOK, ProcSet
           <6> QED BY <2>1, <3>2, <5>2, <6>1 DEF Call, Inv, TypeOK, ProcSet
         <5>3. QED BY <2>1, <3>2, <5>1, <5>2 DEF Call, Call_, Inv, TypeOK
       <4>5. (\A i \in ProcSet :
                  \/ pc[i] \in {"Call", "Call_", "Done"} /\ stack[i] = << >>
                  \/ pc[i] \in {"Start", "Legacy", "Uber"} /\ stack[i] # << >>)'
-        BY <2>1, <3>2 DEF Call, Inv, TypeOK
+        BY <2>1, <3>2 DEF Call, Call_, Inv, TypeOK
       <4>6. (pc \in [ProcSet -> {"Call", "Call_", "Start", "Done", "Legacy", "Uber"}])'
-        BY <3>2 DEF Call
+        BY <2>1, <3>2 DEF Call, Call_, ProcSet, Inv, TypeOK
       <4>7. QED BY <4>1, <4>2, <4>3, <4>4, <4>5, <4>6 DEF TypeOK
     <3>3. CASE Terminating
       BY <2>1, <3>3 DEF Terminating, TypeOK, StackEntry, Inv, vars
@@ -351,7 +382,9 @@ THEOREM Spec => []property
       BY <2>1 DEF Inv, TypeOK, StackEntry
     <3>7. QED BY <3>1, <3>2, <3>3, <3>4, <3>5, <3>6 DEF TypeOK*)
   <2>3. property'
-    BY <2>1 DEF Init, Inv, property, Next
+    \*BY <2>1 DEF Init, Inv, property, Next
+    BY <2>1 DEF property, Inv, vars, Cpu_process, Start, Legacy, Uber,
+                  Call, Call_, Terminating, LEGACY, UBER, Next, one, two
   <2>4. QED BY <2>2, <2>3 DEF Inv
 <1>3. Inv => property
   BY DEF Inv, property
@@ -507,7 +540,9 @@ THEOREM stack \in [{1} \cup {2} ->
          (X \in [{1} \cup {2} -> Seq(StackEntry)])'
 <1> QED BY DEF StackEntry
 
+
+
 =============================================================================
 \* Modification History
-\* Last modified Thu Apr 29 08:35:53 PDT 2021 by uber
+\* Last modified Fri May 07 12:15:24 PDT 2021 by uber
 \* Created Mon Apr 26 07:25:44 PDT 2021 by uber
