@@ -12,6 +12,8 @@ variables Cpu = [cp \in 1..MAXCPUS |->
             [Id |-> cp,                             \* unique CPU identifier
              Pc |-> 0,                              \* program counter (currently abstracted to object control)
              Pr |-> 0,                              \* privelege level
+             Collection |-> 0,
+             Object |-> 0,
              Shared_cpustate |-> 0,
              Legacy_cpustate |-> 0,
              Res_cpustate |-> [m \in 1..MAXUOBJCOLLECTIONS |->
@@ -25,15 +27,15 @@ variables Cpu = [cp \in 1..MAXCPUS |->
               Mem_uobjcollection |-> [co \in 1..MAXUOBJCOLLECTIONS |->
                 [memuobj |-> [ob \in 1..MAXUOBJSWITHINCOLLECTION |->
                    [
-                    uobj_local_data |-> 0 (* Section 1.6: memory safety: invariant 1 *)
+                    uobj_local_data |-> 0, (* Section 1.6: memory safety: invariant 1 *)
+                    lock |-> 0
                    ]
                   ]
                 ]
               ]
              ],
-             
     call_stack = 3;
-
+    
 (***************************************************************************)
 (* Cpu_process(p) runs legacy code or an uObject collection on processor   *)
 (* p.                                                                      *)
@@ -68,7 +70,7 @@ Loop:
             if call_stack > 0 then
                 call_stack := call_stack - 1;
                 with col \in 1..MAXUOBJCOLLECTIONS do
-                    call Uobjcollection_code(p, col, LEGACY)
+                    call Uobjcollection_code(p, col, LEGACY) \* Sentinel will not allow this to happen if legacy called from uObject code
                 end with;
             end if;
         or 
@@ -114,6 +116,7 @@ procedure Uobject_code(p, c, o, saved_pc)
         
     begin
 Start:
+    await memory.Mem_uobjcollection[c].memuobj[o].lock = 0;
     if ~In_uobj then
         Cpu[p].Pc := UBER;
 Loop:
@@ -121,7 +124,9 @@ Loop:
             either
                 if call_stack > 0 then
                     call_stack := call_stack - 1;
+                    \*
                     call Uobject_code_legacy_func(p, UBER);
+                    
                 end if;
             or 
                 (* Section 1.6: memory safety: invariant 1 *)
@@ -165,27 +170,27 @@ begin
 end process;
 
 end algorithm *)
-\* BEGIN TRANSLATION (chksum(pcal) = "92b6f097" /\ chksum(tla) = "de1d4a26")
-\* Label Start of procedure Cpu_process at line 41 col 5 changed to Start_
-\* Label Call of procedure Cpu_process at line 44 col 9 changed to Call_
-\* Label Start of procedure Legacy_code at line 62 col 5 changed to Start_L
-\* Label Loop of procedure Legacy_code at line 64 col 5 changed to Loop_
-\* Label Start of procedure Uobjcollection_code at line 91 col 5 changed to Start_U
-\* Label Start of procedure Uobject_code at line 115 col 5 changed to Start_Uo
-\* Label End of procedure Uobject_code at line 142 col 5 changed to End_
-\* Label A of process one at line 156 col 5 changed to A_
-\* Parameter p of procedure Cpu_process at line 39 col 23 changed to p_
-\* Parameter p of procedure Legacy_code at line 60 col 23 changed to p_L
-\* Parameter saved_pc of procedure Legacy_code at line 60 col 26 changed to saved_pc_
-\* Parameter p of procedure Uobjcollection_code at line 89 col 31 changed to p_U
-\* Parameter c of procedure Uobjcollection_code at line 89 col 34 changed to c_
-\* Parameter saved_pc of procedure Uobjcollection_code at line 89 col 37 changed to saved_pc_U
-\* Parameter p of procedure Uobject_code at line 105 col 24 changed to p_Uo
-\* Parameter saved_pc of procedure Uobject_code at line 105 col 33 changed to saved_pc_Uo
+\* BEGIN TRANSLATION (chksum(pcal) = "52368506" /\ chksum(tla) = "cbf376ff")
+\* Label Start of procedure Cpu_process at line 45 col 5 changed to Start_
+\* Label Call of procedure Cpu_process at line 48 col 9 changed to Call_
+\* Label Start of procedure Legacy_code at line 66 col 5 changed to Start_L
+\* Label Loop of procedure Legacy_code at line 68 col 5 changed to Loop_
+\* Label Start of procedure Uobjcollection_code at line 95 col 5 changed to Start_U
+\* Label Start of procedure Uobject_code at line 119 col 5 changed to Start_Uo
+\* Label End of procedure Uobject_code at line 149 col 5 changed to End_
+\* Label A of process one at line 163 col 5 changed to A_
+\* Parameter p of procedure Cpu_process at line 43 col 23 changed to p_
+\* Parameter p of procedure Legacy_code at line 64 col 23 changed to p_L
+\* Parameter saved_pc of procedure Legacy_code at line 64 col 26 changed to saved_pc_
+\* Parameter p of procedure Uobjcollection_code at line 93 col 31 changed to p_U
+\* Parameter c of procedure Uobjcollection_code at line 93 col 34 changed to c_
+\* Parameter saved_pc of procedure Uobjcollection_code at line 93 col 37 changed to saved_pc_U
+\* Parameter p of procedure Uobject_code at line 109 col 24 changed to p_Uo
+\* Parameter saved_pc of procedure Uobject_code at line 109 col 33 changed to saved_pc_Uo
 CONSTANT defaultInitValue
 VARIABLES Cpu, memory, call_stack, pc, stack, p_, p_L, saved_pc_, p_U, c_, 
           saved_pc_U, p_Uo, c, o, saved_pc_Uo, In_uobj, Uobj_finished, p, 
-          saved_pc, memtest
+          saved_pc
 
 vars == << Cpu, memory, call_stack, pc, stack, p_, p_L, saved_pc_, p_U, c_, 
            saved_pc_U, p_Uo, c, o, saved_pc_Uo, In_uobj, Uobj_finished, p, 
@@ -198,6 +203,8 @@ Init == (* Global variables *)
                    [Id |-> cp,
                     Pc |-> 0,
                     Pr |-> 0,
+                    Collection |-> 0,
+                    Object |-> 0,
                     Shared_cpustate |-> 0,
                     Legacy_cpustate |-> 0,
                     Res_cpustate |-> [m \in 1..MAXUOBJCOLLECTIONS |->
@@ -210,7 +217,8 @@ Init == (* Global variables *)
                      Mem_uobjcollection |-> [co \in 1..MAXUOBJCOLLECTIONS |->
                        [memuobj |-> [ob \in 1..MAXUOBJSWITHINCOLLECTION |->
                           [
-                           uobj_local_data |-> 0
+                           uobj_local_data |-> 0,
+                           lock |-> 0
                           ]
                          ]
                        ]
@@ -234,7 +242,7 @@ Init == (* Global variables *)
         /\ In_uobj = [ self \in ProcSet |-> FALSE]
         /\ Uobj_finished = [ self \in ProcSet |-> FALSE]
         (* Procedure Uobject_code_legacy_func *)
-        /\ p = [ self \in ProcSet |-> 1(*defaultInitValue*)]
+        /\ p = [ self \in ProcSet |-> defaultInitValue]
         /\ saved_pc = [ self \in ProcSet |-> defaultInitValue]
         /\ stack = [self \in ProcSet |-> << >>]
         /\ pc = [self \in ProcSet |-> CASE self = 1 -> "A_"
@@ -371,6 +379,7 @@ Return(self) == /\ pc[self] = "Return"
 Uobjcollection_code(self) == Start_U(self) \/ Call(self) \/ Return(self)
 
 Start_Uo(self) == /\ pc[self] = "Start_Uo"
+                  /\ memory.Mem_uobjcollection[c[self]].memuobj[o[self]].lock = 0
                   /\ IF ~In_uobj[self]
                         THEN /\ Cpu' = [Cpu EXCEPT ![p_Uo[self]].Pc = UBER]
                              /\ pc' = [pc EXCEPT ![self] = "Loop"]
@@ -460,19 +469,7 @@ A_ == /\ pc[1] = "A_"
       /\ /\ p_' = [p_ EXCEPT ![1] = 1]
          /\ stack' = [stack EXCEPT ![1] = << [ procedure |->  "Cpu_process",
                                                pc        |->  "Done",
-                                               p_        |->  p_[1],
-                                               p         |-> defaultInitValue,
-                                               saved_pc  |-> defaultInitValue,
-                                               c         |-> defaultInitValue,
-                                               o         |-> defaultInitValue,
-                                               p_Uo      |-> defaultInitValue,
-                                               In_uobj   |-> defaultInitValue,
-                                               Uobj_finished |-> defaultInitValue,
-                                               p_U       |-> defaultInitValue,
-                                               c_        |-> defaultInitValue,
-                                               saved_pc_U |-> defaultInitValue,
-                                               p_L       |-> defaultInitValue,
-                                               saved_pc_ |-> defaultInitValue ] >>
+                                               p_        |->  p_[1] ] >>
                                            \o stack[1]]
       /\ pc' = [pc EXCEPT ![1] = "Start_"]
       /\ UNCHANGED << Cpu, memory, call_stack, p_L, saved_pc_, p_U, c_, 
@@ -485,19 +482,7 @@ A == /\ pc[2] = "A"
      /\ /\ p_' = [p_ EXCEPT ![2] = 2]
         /\ stack' = [stack EXCEPT ![2] = << [ procedure |->  "Cpu_process",
                                               pc        |->  "Done",
-                                              p_        |->  p_[2],
-                                              p         |-> defaultInitValue,
-                                               saved_pc  |-> defaultInitValue,
-                                               c         |-> defaultInitValue,
-                                               o         |-> defaultInitValue,
-                                               p_Uo      |-> defaultInitValue,
-                                               In_uobj   |-> defaultInitValue,
-                                               Uobj_finished |-> defaultInitValue,
-                                               p_U       |-> defaultInitValue,
-                                               c_        |-> defaultInitValue,
-                                               saved_pc_U |-> defaultInitValue,
-                                               p_L       |-> defaultInitValue,
-                                               saved_pc_ |-> defaultInitValue  ] >>
+                                              p_        |->  p_[2] ] >>
                                           \o stack[2]]
      /\ pc' = [pc EXCEPT ![2] = "Start_"]
      /\ UNCHANGED << Cpu, memory, call_stack, p_L, saved_pc_, p_U, c_, 
@@ -621,7 +606,7 @@ Inv == TypeOK /\ uprog_inv1
 \* Proof outline      
 THEOREM Spec => []uprog_inv1
 <1>1. Init => Inv
-  BY DEF Init, Inv, TypeOK, uprog_inv1
+  BY DEF Init, Inv\*, TypeOK, uprog_inv1
 <1>2. Inv /\ [Next]_vars => Inv'
   BY DEFS Inv, TypeOK, uprog_inv1, vars, Next,
             one, A_, two, A, Start_, Cpu_process, Call_, After_branching,
@@ -633,6 +618,36 @@ THEOREM Spec => []uprog_inv1
   BY DEFS Inv, uprog_inv1
 <1>4. QED
   BY <1>1, <1>2, <1>3, PTL DEF Spec
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
 THEOREM Spec => []uprog_inv1
 <1>1 Init => uprog_inv1
@@ -678,6 +693,47 @@ THEOREM Spec => []uprog_inv1
   <2> QED BY <2>2 DEF uprog_inv1
 <1> QED
   BY <1>1, <1>2, PTL DEF Spec
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
 THEOREM Spec => []uprog_inv1
 <1>1 Init => Inv
@@ -1228,7 +1284,7 @@ THEOREM (\A col \in 1..MAXUOBJCOLLECTIONS :
               \/ ((memory.Mem_uobjcollection)[col].memuobj)[obj].uobj_local_data
                  = 0)'
 <1> QED BY DEF vars, ProcSet
-
+(*
 THEOREM memtest.a = 1 /\
         ( \/ UNCHANGED memtest)
         =>
@@ -1302,8 +1358,8 @@ THEOREM Cpu \in [1..2 ->
                       Shared_cpustate : 0..3, Legacy_cpustate : 0..3,
                       Res_cpustate : [1..MAXUOBJCOLLECTIONS ->
                                         [1..MAXUOBJSWITHINCOLLECTION -> 0..3]]]])' \* switching from p[i] to i for index fixes
-<1> QED BY DEF ProcSet
+<1> QED BY DEF ProcSet*)
 =============================================================================
 \* Modification History
-\* Last modified Wed May 12 05:16:34 PDT 2021 by uber
+\* Last modified Wed Jun 02 17:49:23 PDT 2021 by uber
 \* Created Tue Apr 20 10:54:04 PDT 2021 by uber
