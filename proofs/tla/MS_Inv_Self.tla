@@ -74,7 +74,7 @@ LS_Done:
     return;
 else
 Store:
-    Cpu[p].Pc[2] := STORE;
+    Cpu[p].Pc[2] := STORE; \* pc[i] # store => Cpu[i].Pc[2] # STORE
     memory.Mem_uobjcollection[c].memuobj[o].uobj_local_data := val;
 S_Done:
     Cpu[p].Pc[2] := 0;
@@ -842,10 +842,10 @@ Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
 
 MS_Inv1 == \A i \in 1..MAXCPUS:
-           /\ Cpu[i].Pc[2] = LOAD => c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER
-           /\ Cpu[i].Pc[2] = STORE => c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER
+           /\ Cpu[i].Pc[2] = LOAD => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i]
+           /\ Cpu[i].Pc[2] = STORE => (c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l[i]
 \* I still think I am going to have to use the pc to reason about what happens in the previous step when our Pc is set to LOAD (e.g.)    
-
+(** changed to account for legacy call **)
       
 
 
@@ -857,6 +857,49 @@ MS_Inv7 == \A i \in ProcSet:
            /\ (Cpu[1].Collection = Cpu[2].Collection /\ Cpu[1].Object = Cpu[2].Object) => Cpu[1].Pc[2] # CS \/ Cpu[2].Pc[2] # CS
 
 
+TypeOK == /\ Cpu \in [1..MAXCPUS ->
+                   [Id : 1..MAXCPUS,
+                    Pc : [1..2 -> 0..3],
+                    Pr : 0..3,
+                    Collection : 0..MAXUOBJCOLLECTIONS,
+                    Object : 0..MAXUOBJSWITHINCOLLECTION,
+                    Shared_cpustate : 0..3,
+                    Legacy_cpustate : 0..3,
+                    Res_cpustate : [1..MAXUOBJCOLLECTIONS ->
+                        [1..MAXUOBJSWITHINCOLLECTION -> 0..3]
+                    ]
+                   ]
+                 ]
+          /\ \A i \in ProcSet: p_[i] \in {1,2}
+          \* these should actually be "S_Done" and "L_Done"
+          \* this only seems to be working when pc' comes from stack, which doesn't make any sense (opposes expectation)
+          \*/\ \A i \in ProcSet: pc[i] # "Store" => Cpu[i].Pc[2] # STORE \* do I need to just do the current process?
+          \*/\ \A i \in ProcSet: pc[i] # "Load" => Cpu[i].Pc[2] # LOAD \* Can't use "'", need to reason about current state, but current state isn't LOAD under label LOAD
+          /\ \A i \in ProcSet: pc[i] # "S_Done" => Cpu[i].Pc[2] # STORE \* do I need to just do the current process?
+          /\ \A i \in ProcSet: pc[i] # "L_Done" => Cpu[i].Pc[2] # LOAD \* Can't use "'", need to reason about current state, but current state isn't LOAD under label LOAD
+          /\ \A i \in ProcSet: p_C[i] \in {1,2} \* for case Collection(self)
+          /\ \A i \in ProcSet: collection_[i] \in 1..MAXUOBJCOLLECTIONS \* ditto
+          \*/\ \A i \in ProcSet \ {self} : UNCHANGED Cpu[i]
+          /\ \A i \in ProcSet: p_[i] = i
+          /\ \A i \in ProcSet: p_m[i] = i
+          /\ \A i \in ProcSet: p_C[i] = i
+          /\ \A i \in ProcSet: p_L[i] = i
+          /\ \A i \in ProcSet: p_U[i] = i
+          /\ \A i \in ProcSet: p_Uo[i] = i
+          /\ \A i \in ProcSet: p[i] = i
+          \*/\ \A i \in ProcSet : pc[i] \in {"Loop"} => Head(stack[i])[pc] = i
+          /\ \A i \in ProcSet : pc[i] \in {"L_Done"} => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i]
+          /\ \A i \in ProcSet : pc[i] \in {"S_Done"} => (c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l[i]
+          /\ pc \in [ProcSet -> {"A", "A_", "End", "Start", "End_", "CS_Unlock", "Start_", "Load_Legacy",
+                                 "LL_Done", "Load", "L_Done", "Start_m", "Store_Legacy", "LS_Done", "Store", "S_Done",
+                                 "Start_C", "Call_", "Collection", "After_branching", "Start_L", "Loop", "Start_U",
+                                 "Call", "Return", "Start_Uo", "CS_Start", "CS_Loop", "CS_Read", "CS_Write", "CS_Exit"}] \* needed to reason about pc'
+          
+(* Okay, changing from Store/Load to S_Done/..., marking current parts of proof not working with ## *)
+    \* this somehow did not change anything -- wild
+          
+THEOREM TypeCorrect == Spec => []TypeOK
+  <1> QED PROOF OMITTED
 
 
 THEOREM Spec => []MS_Inv1 
@@ -872,11 +915,12 @@ THEOREM Spec => []MS_Inv1
     BY DEF Init, MS_Inv1, MAXCPUS, STORE
   <2>3. QED
     BY <2>1, <2>2
-<1>2 MS_Inv1 /\ [Next]_vars => MS_Inv1'
-  <2> SUFFICES ASSUME MS_Inv1,
+<1>2 TypeOK /\ MS_Inv1 /\ [Next]_vars => MS_Inv1'
+  <2> SUFFICES ASSUME TypeOK,
+                      MS_Inv1,
                       Next
                PROVE  MS_Inv1'
-    BY DEF MS_Inv1, vars
+    BY DEF MS_Inv1, vars, TypeOK
   <2>1. CASE one
     BY <2>1 DEF MS_Inv1, one, A_
   <2>2. CASE two
@@ -894,6 +938,121 @@ THEOREM Spec => []MS_Inv1
                         \/ Uobject_code_legacy_func(self)
                  PROVE  MS_Inv1'
       BY <2>3 
+    <3>a. \A i \in ProcSet \ {self} : UNCHANGED Cpu[i]
+      <4>1. CASE memory_load(self)
+        <5>1. CASE Start_(self)
+          BY <5>1, <4>1, <2>3 DEF MS_Inv1, ProcSet, Start_
+        <5>2. CASE Load_Legacy(self)
+          BY <5>2, <4>1, <2>3 DEF MS_Inv1, ProcSet, Load_Legacy, TypeOK (* added p_[i] = i*)
+        <5>3. CASE LL_Done(self)
+          BY <5>3, <4>1, <2>3 DEF MS_Inv1, ProcSet, LL_Done, TypeOK (*ditto*)
+        <5>4. CASE Load(self)
+          BY <5>4, <4>1, <2>3 DEF MS_Inv1, ProcSet, Load, TypeOK (*ditto*)
+        <5>5. CASE L_Done(self)
+          BY <5>5, <4>1, <2>3 DEF MS_Inv1, ProcSet, L_Done, TypeOK (*ditto*)
+        <5>6. QED
+          BY <4>1, <5>1, <5>2, <5>3, <5>4, <5>5 DEF memory_load        
+      <4>2. CASE memory_store(self) \* only Start_m worked from straight decompose, now remove defs -> all worked
+        <5>1. CASE Start_m(self)
+          BY <5>1, <4>2, <2>3 DEF MS_Inv1, ProcSet, Start_m,
+                            TypeOK \* did p_m[i] = i
+        <5>2. CASE Store_Legacy(self)
+          BY <5>2, <4>2, <2>3 DEF MS_Inv1, ProcSet, Store_Legacy, 
+                            TypeOK
+        <5>3. CASE LS_Done(self)
+          BY <5>3, <4>2, <2>3 DEF MS_Inv1, ProcSet, LS_Done,
+                            TypeOK
+        <5>4. CASE Store(self)
+          BY <5>4, <4>2, <2>3 DEF MS_Inv1, ProcSet, Store,
+                            TypeOK
+        <5>5. CASE S_Done(self)
+          BY <5>5, <4>2, <2>3 DEF MS_Inv1, ProcSet, S_Done,
+                            TypeOK
+        <5>6. QED
+          BY <4>2, <5>1, <5>2, <5>3, <5>4, <5>5 DEF memory_store
+         (* added p_m[i] = i*)
+      <4>3. CASE Cpu_process(self)
+        <5>1. CASE Start_C(self) \* didn't work, probably cpu or cpu problem, split -> WORKED
+          <6>1 CASE Cpu'
+                = [Cpu EXCEPT
+                     ![p_C[self]] = [Cpu[p_C[self]] EXCEPT !.Pr = LEGACY]]
+            BY <5>1, <4>3, <2>3, <6>1 DEF MS_Inv1, ProcSet, Start_C, TypeOK (*p_C*)
+          <6>2 CASE Cpu'
+                = [Cpu EXCEPT
+                     ![p_C[self]] = [Cpu[p_C[self]] EXCEPT !.Pr = UBER]]
+            BY <5>1, <4>3, <2>3, <6>2 DEF MS_Inv1, ProcSet, Start_C, TypeOK (*p_C*)
+          <6> QED BY <6>1, <6>2, <5>1 DEF Start_C
+        <5>2. CASE Call_(self)
+          BY <5>2, <4>3, <2>3 DEF MS_Inv1, ProcSet, Call_, TypeOK
+        <5>3. CASE Collection(self)
+          BY <5>3, <4>3, <2>3 DEF MS_Inv1, ProcSet, Collection, TypeOK
+        <5>4. CASE After_branching(self)
+          BY <5>4, <4>3, <2>3 DEF MS_Inv1, ProcSet, After_branching, TypeOK
+        <5>5. QED
+          BY <4>3, <5>1, <5>2, <5>3, <5>4 DEF Cpu_process
+         (*p_C*)
+      <4>4. CASE Legacy_code(self) (*p_L*)
+        <5>1. CASE Start_L(self)
+          BY <5>1, <4>4, <2>3 DEF MS_Inv1, ProcSet, Start_L, TypeOK
+        <5>2. CASE Loop(self) \* going to split into cpu and unchanged
+          <6>1 CASE \E col \in 1..MAXUOBJCOLLECTIONS : Cpu'
+                                = [Cpu EXCEPT
+                                     ![p_L[self]] = [Cpu[p_L[self]] EXCEPT
+                                                       !.Collection = col]]
+            BY <5>2, <4>4, <2>3, <6>1, \A i \in ProcSet : p_L[i] = i DEF MS_Inv1, ProcSet, Loop, TypeOK
+          <6>2 CASE Cpu'
+                = [Cpu EXCEPT
+                     ![p_L[self]] = [Cpu[p_L[self]] EXCEPT
+                                       !.Pc = [Cpu[p_L[self]].Pc EXCEPT
+                                                 ![1] = saved_pc_[self]]]]
+            BY <5>2, <4>4, <2>3, <6>2, \A i \in ProcSet : p_L[i] = i DEF MS_Inv1, ProcSet, Loop, TypeOK
+          <6>3 CASE UNCHANGED Cpu
+            BY <5>2, <4>4, <2>3, <6>3 DEF MS_Inv1, ProcSet, Loop, TypeOK
+          <6> QED BY <6>1, <6>2, <6>3, <5>2 DEF Loop
+        <5>3. QED
+          BY <4>4, <5>1, <5>2 DEF Legacy_code
+      <4>5. CASE Uobjcollection_code(self) (*p_U*)
+        <5>1. CASE Start_U(self)
+          BY <5>1, <4>5, <2>3 DEF TypeOK, MS_Inv1, ProcSet, Start_U
+        <5>2. CASE Call(self)
+          BY <5>2, <4>5, <2>3 DEF TypeOK, MS_Inv1, ProcSet, Call
+        <5>3. CASE Return(self)
+          BY <5>3, <4>5, <2>3 DEF TypeOK, MS_Inv1, ProcSet, Return
+        <5>4. QED
+          BY <4>5, <5>1, <5>2, <5>3 DEF Uobjcollection_code
+      <4>6. CASE Uobject_code(self) (* p_Uo *)
+        <5>1. CASE Start_Uo(self)
+          <6>1 CASE Cpu' = [Cpu EXCEPT ![p_Uo[self]].Pc[1] = UBER]
+            BY <5>1, <4>6, <2>3, <6>1, \A i \in ProcSet : p_Uo[i] = i DEF MS_Inv1, ProcSet, Start_Uo, TypeOK
+          <6>2 CASE UNCHANGED Cpu
+            BY <5>1, <4>6, <2>3, <6>2 DEF MS_Inv1, ProcSet, Start_Uo, TypeOK
+          <6> QED BY  <6>1, <6>2, <5>1 DEF Start_Uo
+        <5>2. CASE CS_Start(self)
+          BY <5>2, <4>6, <2>3 DEF MS_Inv1, ProcSet, CS_Start, TypeOK
+        <5>3. CASE CS_Loop(self)
+          BY <5>3, <4>6, <2>3 DEF MS_Inv1, ProcSet, CS_Loop \*some worked without adding TypeOK (forgot)
+        <5>4. CASE CS_Read(self)
+          BY <5>4, <4>6, <2>3 DEF MS_Inv1, ProcSet, CS_Read
+        <5>5. CASE CS_Write(self)
+          BY <5>5, <4>6, <2>3 DEF MS_Inv1, ProcSet, CS_Write
+        <5>6. CASE CS_Exit(self)
+          BY <5>6, <4>6, <2>3 DEF MS_Inv1, ProcSet, CS_Exit, TypeOK
+        <5>7. CASE CS_Unlock(self)
+          BY <5>7, <4>6, <2>3, /\ \A i \in ProcSet : p_Uo[i] = i DEF MS_Inv1, ProcSet, CS_Unlock, TypeOK
+        <5>8. CASE End_(self)
+          BY <5>8, <4>6, <2>3 DEF MS_Inv1, ProcSet, End_, TypeOK
+        <5>9. QED
+          BY <4>6, <5>1, <5>2, <5>3, <5>4, <5>5, <5>6, <5>7, <5>8 DEF Uobject_code
+      <4>7. CASE Uobject_code_legacy_func(self) (* p *)
+        <5>1. CASE Start(self)
+          BY <5>1, <4>7, <2>3 DEF TypeOK, MS_Inv1, ProcSet, Start
+        <5>2. CASE End(self)
+          BY <5>2, <4>7, <2>3 DEF TypeOK, MS_Inv1, ProcSet, End
+        <5>3. QED
+          BY <4>7, <5>1, <5>2 DEF Uobject_code_legacy_func   
+      <4>8. QED
+        BY <4>1, <4>2, <4>3, <4>4, <4>5, <4>6, <4>7
+      
     <3>1. CASE Start_(self)
       BY <2>3, <3>1 DEF MS_Inv1, Start_
     <3>2. CASE Load_Legacy(self)
@@ -901,74 +1060,230 @@ THEOREM Spec => []MS_Inv1
     <3>3. CASE LL_Done(self)  (*** Cpu[i].Pc[2] = 0 ***) (* Need p_[self] \in {1,2}? *)
       <4>1 \E self_1 \in {1} \cup {2} : Cpu'
           = [Cpu EXCEPT
-               ![p_[self]] = [Cpu[p_[self]] EXCEPT
-                                !.Pc = [Cpu[p_[self]].Pc EXCEPT ![2] = 0]]]
-        BY <2>3, <3>3 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet
-      <4>2 CASE (Cpu[1].Pc[2] = 0)' /\ (Cpu[2].Pc[2] = 0)'
-        BY <4>1, <2>3, <3>3, <4>2 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet
-      <4> QED BY <4>1, <4>2, <2>3, <3>3 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet
+               ![self_1(*p_[self]*)] = [Cpu[self_1(*p_[self]*)] EXCEPT
+                                !.Pc = [Cpu[self_1(*p_[self]*)].Pc EXCEPT ![2] = 0]]]
+        BY <2>3, <3>3 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet, TypeOK
+      <4>a (Cpu[1].Pc[2] = 0)' \/ (Cpu[2].Pc[2] = 0)'
+        BY <4>1 DEF TypeOK, MAXCPUS\*<2>3, <3>3, <4>1 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet
+      <4>2 CASE (Cpu[1].Pc[2] = 0)'
+        <5> SUFFICES ASSUME NEW i \in (1..MAXCPUS)'
+                     PROVE  (/\ Cpu[i].Pc[2] = LOAD => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i]
+                             /\ Cpu[i].Pc[2] = STORE => (c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l[i])'
+          BY DEF MS_Inv1
+        <5>1. (Cpu[i].Pc[2] = LOAD => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i])' \* c_ and o_ are altered
+          BY <4>1, <2>3, <3>3, <4>2 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet, TypeOK \* Added claim to TypeOK saying pc can't be LOAD/STORE
+        <5>2. (Cpu[i].Pc[2] = STORE => (c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l[i])'
+          BY <4>1, <2>3, <3>3, <4>2 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet
+        <5>3. QED
+          BY <5>1, <5>2
+        
+      <4>3 CASE (Cpu[2].Pc[2] = 0)'
+        <5> SUFFICES ASSUME NEW i \in (1..MAXCPUS)'
+                     PROVE  (/\ Cpu[i].Pc[2] = LOAD => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i]
+                             /\ Cpu[i].Pc[2] = STORE => (c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l[i])'
+          BY DEF MS_Inv1
+        <5>1. (Cpu[i].Pc[2] = LOAD => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i])'
+          BY <4>1, <2>3, <3>3, <4>3 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet, TypeOK
+        <5>2. (Cpu[i].Pc[2] = STORE => (c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l[i])'
+          BY <4>1, <2>3, <3>3, <4>3 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet
+        <5>3. QED
+          BY <5>1, <5>2
+        
+      (*<4>3 CASE (Cpu[2].Pc[2] = 0)'
+        BY <2>3, <3>3, <4>3 DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS*)
+      <4> QED BY <4>1, <4>2, <4>3, <2>3, <3>3, <4>a(*, TypeCorrect*) DEF MS_Inv1, LL_Done, LOAD, STORE, MAXCPUS, ProcSet, TypeOK
+    \* ##
+    <3>x. \A i \in ({1} \cup {2}) \ {self} : UNCHANGED <<c_[i],l_[i],o_[i],p_[i],c_m[i],l[i],o_m[i],p_m[i], Cpu[i], pc[i]>>
     <3>4. CASE Load(self)     (*** Cpu[i].Pc[2] = LOAD ***) (* o and c set in call to load, object and collection set before that *)
-      BY <2>3, <3>4 DEF MS_Inv1, Load, LOAD, STORE
+      BY <3>a, <3>x, TypeCorrect, <2>3, <3>4,  (pc[self] \in {"L_Done"})', ((c_[self] = Cpu[self].Collection /\ o_[self] = Cpu[self].Object /\ Cpu[self].Pc[1] = UBER) \/ l_[self])'
+                 DEF MS_Inv1, Load, LOAD, STORE, TypeOK, ProcSet, MAXCPUS
     <3>5. CASE L_Done(self)   (*** Cpu[i].Pc[2] = 0 ***)
-      BY <2>3, <3>5 DEF MS_Inv1, L_Done, LOAD, STORE
+      BY <2>3, <3>5 DEF MS_Inv1, L_Done, LOAD, STORE, TypeOK
     <3>6. CASE Start_m(self)
       BY <2>3, <3>6 DEF MS_Inv1, Start_m
     <3>7. CASE Store_Legacy(self)
       BY <2>3, <3>7 DEF MS_Inv1, Store_Legacy, LEGSTORE, LOAD, STORE
     <3>8. CASE LS_Done(self)  (* Like above 3 *)
-      BY <2>3, <3>8 DEF MS_Inv1, LS_Done, LOAD, STORE
+      BY <2>3, <3>8 DEF MS_Inv1, LS_Done, LOAD, STORE, TypeOK
+    \* ##
     <3>9. CASE Store(self)
-      BY <2>3, <3>9 DEF MS_Inv1, Store, LOAD, STORE
+      BY <2>3, <3>9 DEF MS_Inv1, Store, LOAD, STORE, TypeOK, ProcSet, MAXCPUS
     <3>10. CASE S_Done(self)
-      BY <2>3, <3>10 DEF MS_Inv1, S_Done, LOAD, STORE
+      BY <2>3, <3>10 DEF MS_Inv1, S_Done, LOAD, STORE, TypeOK
     <3>11. CASE Start_C(self) (* [Cpu[p_C[self]] EXCEPT !.Pr = LEGACY], add obvious fact *)
-      BY <2>3, <3>11 DEF MS_Inv1, Start_C
+      BY <2>3, <3>11 DEF MS_Inv1, Start_C, LOAD, STORE, TypeOK, ProcSet, MAXCPUS
     <3>12. CASE Call_(self)
       BY <2>3, <3>12 DEF MS_Inv1, Call_
-    <3>13. CASE Collection(self)   (* !.Collection = collection_[self] *)
-      BY <2>3, <3>13 DEF MS_Inv1, Collection
+    <3>13. CASE Collection(self)   (* !.Collection = collection_[self] *) \*Cpu' = [Cpu EXCEPT ![p_C[self]].Collection = collection_[self]] -> need p_C in bounds?, NO, also no collection_ (WASN"T WORKING AND JUST WORKED) (MAYBE TypeOK Additions)
+      BY <2>3, <3>13 DEF MS_Inv1, Collection, TypeOK, LOAD, STORE, ProcSet, MAXCPUS
     <3>14. CASE After_branching(self)
       BY <2>3, <3>14 DEF MS_Inv1, After_branching
     <3>15. CASE Start_L(self)
-      BY <2>3, <3>15 DEF MS_Inv1, Start_L
-    <3>16. CASE Loop(self)  (* [Cpu[p_L[self]] EXCEPT !.Collection = col] *)
-      BY <2>3, <3>16 DEF MS_Inv1, Loop
+      BY <2>3, <3>15 DEF MS_Inv1, Start_L, TypeOK, LOAD, STORE, ProcSet, MAXCPUS, LEGACY, UBER
+    \* ##
+    <3>16. CASE Loop(self)  (* [Cpu[p_L[self]] EXCEPT !.Collection = col] *) \* probably too big, split by cpu stuff, then try <3>a?
+      <4>x \A i \in ({1} \cup {2}) \ {self} : UNCHANGED <<c_[i],l_[i],o_[i],p_[i],c_m[i],l[i],o_m[i],p_m[i]>>
+        \*BY <2>3, <3>16 DEF Loop, ProcSet
+        \* TODO: make this an axiom? I SHOULD, FOR ALL PLUSCAL -> TLA VARS
+      <4>1 CASE \E col \in 1..MAXUOBJCOLLECTIONS : Cpu'
+                                = [Cpu EXCEPT
+                                     ![p_L[self]] = [Cpu[p_L[self]] EXCEPT
+                                                       !.Collection = col]]
+        BY <3>a, <4>x, <2>3, <3>16, <4>1, \A i \in ProcSet: p_L[i] = i DEF MS_Inv1, Loop, TypeOK, LOAD, STORE, ProcSet, MAXCPUS, LEGACY, UBER
+      <4>2 CASE Cpu'
+                = [Cpu EXCEPT
+                     ![p_L[self]] = [Cpu[p_L[self]] EXCEPT
+                                       !.Pc = [Cpu[p_L[self]].Pc EXCEPT
+                                                 ![1] = saved_pc_[self]]]]
+        BY <3>a, <4>x, <2>3, <3>16, <4>2, \A i \in ProcSet: p_L[i] = i DEF MS_Inv1, Loop, TypeOK, LOAD, STORE, ProcSet, MAXCPUS, LEGACY, UBER
+      <4>3 CASE UNCHANGED Cpu \* need other i unchanged, have either Cpu[other][2] # 2 or does and other stuff holds, which is altered, so I need facts for that
+        BY <3>a, <4>x, (*<2>3,*) <3>16, <4>3, pc[self] = "Loop",
+          \A i \in {1} \cup {2} : pc[i] # "S_Done" => (Cpu[i].Pc)[2] # 2,
+          \A i \in {1} \cup {2} : pc[i] # "L_Done" => (Cpu[i].Pc)[2] # 1\*,
+          \*\A i \in {1} \cup {2} : (Cpu[i].Pc)[2] # 2,
+          \*\A i \in {1} \cup {2} : ((Cpu[i].Pc)[2] # 2)'
+          DEF MS_Inv1, Loop, TypeOK, LOAD, STORE, ProcSet, MAXCPUS, LEGACY, UBER
+      <4> QED BY <2>3, <3>16, <4>1, <4>2, <4>3 DEF Loop
     <3>17. CASE Start_U(self)
       BY <2>3, <3>17 DEF MS_Inv1, Start_U
     <3>18. CASE Call(self)  (* [Cpu[p_U[self]] EXCEPT !.Object = object] *)
-      BY <2>3, <3>18 DEF MS_Inv1, Call
+      <4> SUFFICES ASSUME NEW i \in (1..MAXCPUS)'
+                   PROVE  (/\ (Cpu[i].Pc[2] = LOAD => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i])'
+                           /\ (Cpu[i].Pc[2] = STORE => (c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l[i])')
+        BY DEF MS_Inv1
+      <4>1. (Cpu[i].Pc[2] = LOAD => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i])'
+        BY <2>3, <3>18, (pc[self] # "Store")', (Cpu[self].Pc[2] # STORE)', (pc[self] # "Load")', (Cpu[self].Pc[2] # LOAD)', UNCHANGED Cpu[self].Pc DEF MS_Inv1, Call, TypeOK, LOAD, STORE, ProcSet, MAXCPUS, LEGACY
+      <4>2. (Cpu[i].Pc[2] = STORE => (c_m[i] = Cpu[i].Collection /\ o_m[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l[i])'
+        BY <2>3, <3>18, (pc[self] # "Store")', (Cpu[self].Pc[2] # STORE)', (pc[self] # "Load")', (Cpu[self].Pc[2] # LOAD)', UNCHANGED Cpu[self].Pc DEF MS_Inv1, Call, TypeOK, LOAD, STORE, ProcSet, MAXCPUS, LEGACY
+      <4>3. QED
+        BY <4>1, <4>2
+      
     <3>19. CASE Return(self)  (* [Cpu[p_U[self]].Pc EXCEPT ![1] = saved_pc_U[self]] *)
-      BY <2>3, <3>19 DEF MS_Inv1, Return
+      BY <2>3, <3>19 DEF MS_Inv1, Return, TypeOK
     <3>20. CASE Start_Uo(self)  (* Cpu' = [Cpu EXCEPT ![p_Uo[self]].Pc[1] = UBER] *)
-      BY <2>3, <3>20 DEF MS_Inv1, Start_Uo
-    <3>21. CASE CS_Start(self)  (* [Cpu[p_Uo[self]].Pc EXCEPT ![2] = CS] *)
-      BY <2>3, <3>21 DEF MS_Inv1, CS_Start
+      <4>1 CASE Cpu' = [Cpu EXCEPT ![p_Uo[self]].Pc[1] = UBER]
+        BY <2>3, <3>20, <4>1 DEF MS_Inv1, Start_Uo, TypeOK
+      <4>2 CASE UNCHANGED Cpu
+        BY <2>3, <3>20, <4>2 DEF MS_Inv1, Start_Uo, TypeOK
+      <4> QED BY <4>1, <4>2, <3>20 DEF Start_Uo
+    <3>21. CASE CS_Start(self)  (* [Cpu[p_Uo[self]].Pc EXCEPT ![2] = CS] *) \* Add CS
+      BY <2>3, <3>21 DEF MS_Inv1, CS_Start, TypeOK, CS, LOAD, STORE
     <3>22. CASE CS_Loop(self)
       BY <2>3, <3>22 DEF MS_Inv1, CS_Loop
     <3>23. CASE CS_Read(self) (* c_, o_ *)
-      BY <2>3, <3>23 DEF MS_Inv1, CS_Read
+      BY <2>3, <3>23 DEF MS_Inv1, CS_Read, TypeOK
     <3>24. CASE CS_Write(self) (* c_m, o_m *)
-      BY <2>3, <3>24 DEF MS_Inv1, CS_Write
+      BY <2>3, <3>24 DEF MS_Inv1, CS_Write, TypeOK
+    \* ##
     <3>25. CASE CS_Exit(self) (* Cpu Pc 2 = 0 *)
-      BY <2>3, <3>25 DEF MS_Inv1, CS_Exit
+      BY <3>a, <2>3, <3>25 DEF MS_Inv1, CS_Exit, TypeOK, LOAD, STORE
     <3>26. CASE CS_Unlock(self) (* Cpu saved_pc *)
-      BY <2>3, <3>26 DEF MS_Inv1, CS_Unlock
+      BY <2>3, <3>26 DEF MS_Inv1, CS_Unlock, TypeOK
     <3>27. CASE End_(self)
       BY <2>3, <3>27 DEF MS_Inv1, End_
     <3>28. CASE Start(self) (* Cpu Pc 1 = Legacy *)
-      BY <2>3, <3>28 DEF MS_Inv1, Start
+      BY <2>3, <3>28 DEF MS_Inv1, Start, TypeOK
     <3>29. CASE End(self)  (* Cpu Pc 1 = saved_pc *)
-      BY <2>3, <3>29 DEF MS_Inv1, End
+      BY <2>3, <3>29 DEF MS_Inv1, End, TypeOK
     <3>30. QED
       BY <2>3, <3>1, <3>10, <3>11, <3>12, <3>13, <3>14, <3>15, <3>16, <3>17, <3>18, <3>19, <3>2, <3>20, <3>21, <3>22, <3>23, <3>24, <3>25, <3>26, <3>27, <3>28, <3>29, <3>3, <3>4, <3>5, <3>6, <3>7, <3>8, <3>9 DEF Cpu_process, Legacy_code, Uobjcollection_code, Uobject_code, Uobject_code_legacy_func, memory_load, memory_store
   <2>4. CASE Terminating
+    BY <2>4 DEF ProcSet, vars, Terminating, MS_Inv1
   <2> QED
     BY <2>1, <2>2, <2>3, <2>4 DEF Next
-<1> QED BY <1>1, <1>2, PTL DEF Spec
+<1> QED BY <1>1, <1>2, TypeCorrect, PTL DEF Spec
 
 
+THEOREM /\ Cpu \in [1..MAXCPUS ->
+                   [Id : 1..MAXCPUS,
+                    Pc : [1..2 -> 0..3],
+                    Pr : 0..3,
+                    Collection : 0..MAXUOBJCOLLECTIONS,
+                    Object : 0..MAXUOBJSWITHINCOLLECTION,
+                    Shared_cpustate : 0..3,
+                    Legacy_cpustate : 0..3,
+                    Res_cpustate : [1..MAXUOBJCOLLECTIONS ->
+                        [1..MAXUOBJSWITHINCOLLECTION -> 0..3]
+                    ]
+                   ]
+                 ]
+          \*/\ Cpu \in [1..MAXCPUS -> [Pc : 0..3]]
+          \*/\ Cpu \in [1..MAXCPUS -> [Pc : [1..2 -> 0..3]]]
+          /\ \A i \in ProcSet: p_[i] \in {1,2}
+        /\ \E self_1 \in {1} \cup {2} :
+          Cpu'
+          = [Cpu EXCEPT
+               ![self_1] = [Cpu[self_1] EXCEPT
+                              !.Pc = [Cpu[self_1].Pc EXCEPT ![2] = 0]]]
+        (*/\ Cpu'
+          = [Cpu EXCEPT
+               ![1] = [Cpu[1] EXCEPT
+                              !.Pc = [Cpu[1].Pc EXCEPT ![2] = 0]]]*)
+        =>
+        ((Cpu[1].Pc)[2] = 0)' \/ ((Cpu[2].Pc)[2] = 0)'
+BY DEF MAXCPUS
 
+THEOREM /\ p = [ i \in ProcSet |-> 0]
+        /\ p' = [p EXCEPT ![1] = 1]
+        =>
+        (p[1] = 1)'
+<1> QED BY DEF ProcSet
 
+THEOREM /\ p \in [ ProcSet -> 0..2]
+        /\ p' = [p EXCEPT ![1] = 1]
+        =>
+        (p[1] = 1)'
+<1> QED BY DEF ProcSet
+
+THEOREM /\ p \in [{1} \cup {2} -> 1..2]
+        /\ p' = [p EXCEPT ![2] = 1]
+        =>
+        (p \in [{1} \cup {2} -> 1..2])'
+OBVIOUS
+
+THEOREM /\ \A i \in {1} \cup {2} :
+             pc[i] \in {"L_Done"}
+             => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object
+                 /\ (Cpu[i].Pc)[1] = UBER)
+                \/ l_[i]
+        /\ (pc[1] \in {"L_Done"})
+        => ((c_[1] = Cpu[1].Collection /\ o_[1] = Cpu[1].Object
+                 /\ (Cpu[1].Pc)[1] = UBER)
+                \/ l_[1])
+OBVIOUS
+        
+THEOREM /\ \A i \in 1..2 :
+          /\ (Cpu[i].Pc)[2] = 1
+             => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object
+                 /\ (Cpu[i].Pc)[1] = UBER)
+                \/ l_[i]
+        /\ pc \in [ProcSet -> {"A", "A_", "End", "Start", "End_", "CS_Unlock", "Start_", "Load_Legacy",
+                                 "LL_Done", "Load", "L_Done", "Start_m", "Store_Legacy", "LS_Done", "Store", "S_Done",
+                                 "Start_C", "Call_", "Collection", "After_branching", "Start_L", "Loop", "Start_U",
+                                 "Call", "Return", "Start_Uo", "CS_Start", "CS_Loop", "CS_Read", "CS_Write", "CS_Exit"}]
+        /\ \A i \in ProcSet : pc[i] \in {"L_Done"} => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object /\ Cpu[i].Pc[1] = UBER) \/ l_[i]
+        /\ \A i \in ProcSet: p_[i] = i
+        /\ \E self \in {1} \cup {2} :
+            /\ Cpu' = [Cpu EXCEPT ![p_[self]].Pc[2] = 1]
+            /\ pc' = [pc EXCEPT ![self] = "L_Done"]
+            /\ \A i \in ({1} \cup {2}) \ {self} : UNCHANGED <<c_[i],l_[i],o_[i],p_[i],c_m[i],l[i],o_m[i],p_m[i], Cpu[i], pc[i]>>
+        => (\A i \in 1..2 :
+           /\ (Cpu[i].Pc)[2] = 1
+              => (c_[i] = Cpu[i].Collection /\ o_[i] = Cpu[i].Object
+                  /\ (Cpu[i].Pc)[1] = UBER)
+                 \/ l_[i])'
+BY DEF ProcSet
+
+THEOREM /\ \A i \in 1..2 : Cpu[i] = 1 => c_[i] = Cpu[i].Collection
+        /\ pc \in [ProcSet -> {"LL_Done", "L_Done"}]
+        /\ \A i \in ProcSet : pc[i] \in {"L_Done"} => c_[i] = Cpu[i].Collection
+        /\ \A i \in ProcSet: p_[i] = i
+        /\ \E self \in {1} \cup {2} :
+            /\ \A i \in ({1} \cup {2}) \ {self} : UNCHANGED <<c_[i], Cpu[i], pc[i]>>
+            /\ Cpu' = [Cpu EXCEPT ![p_[self]] = 1]
+            /\ pc' = [pc EXCEPT ![self] = "L_Done"]
+        => (\A i \in 1..2 : Cpu[i] = 1 => c_[i] = Cpu[i].Collection)'
+BY DEF ProcSet
 
 
 
@@ -1332,8 +1647,31 @@ THEOREM Spec => []MS_Inv7
   <2> QED BY <2>2 DEF MS_Inv7
 <1> QED
   BY <1>1, <1>2, PTL DEF Spec
+  
+  
+THEOREM \E self_1 \in {1} \cup {2} : Cpu' = [Cpu EXCEPT
+            ![self_1] = [Cpu[self_1] EXCEPT
+                !.Pc = [Cpu[self_1].Pc EXCEPT ![2] = 0]]]
+        => ((Cpu[1].Pc)[2] = 0)' \/ ((Cpu[2].Pc)[2] = 0)'
+<1> QED OBVIOUS
+  
+THEOREM Cpu' = [Cpu EXCEPT
+            ![1] = [Cpu[1] EXCEPT
+                !.Pc = [Cpu[1].Pc EXCEPT ![2] = 0]]]
+        => ((Cpu[1].Pc)[2] = 0)'
+<1> QED OBVIOUS
+  
+THEOREM Cpu' = [Cpu EXCEPT
+            ![1] = [Cpu[1] EXCEPT
+                !.Pc = [Cpu[1].Pc EXCEPT ![2] = 0]]]
+        => Cpu[1].Pc[2]' = 0
+<1> QED OBVIOUS
 
+(*VARIABLE processor
+
+THEOREM processor' = [processor EXCEPT ![1] = 0] => processor[1]' = 0
+OBVIOUS *)
 =============================================================================
 \* Modification History
-\* Last modified Tue Jun 08 13:04:17 PDT 2021 by uber
+\* Last modified Tue Jun 22 05:50:02 PDT 2021 by uber
 \* Created Thu Jun 03 04:38:11 PDT 2021 by uber

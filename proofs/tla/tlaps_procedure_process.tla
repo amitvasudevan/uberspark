@@ -391,7 +391,7 @@ THEOREM Spec => []property
 <1>4. QED BY <1>1, <1>2, <1>3, PTL DEF Spec
 
 THEOREM p = [self \in ProcSet |-> defaultInitValue] => p \in [ProcSet -> 1..2 \cup {defaultInitValue}]
-<1>1. QED OBVIOUS
+OBVIOUS
 
 empty == << >>
 THEOREM empty \in Seq(StackEntry)
@@ -481,6 +481,36 @@ THEOREM (p \in [{1} \cup {2} -> 1..2 \cup {defaultInitValue}])
           (p \in [{1} \cup {2} -> 1..2 \cup {defaultInitValue}])'
   <1> QED BY DEF ProcSet
 
+
+THEOREM (\A i \in ProcSet : p' = [p EXCEPT ![i] = 0]) =>
+          (p \in [{1} \cup {2} -> {0}])'
+  <1> QED BY DEF ProcSet
+  
+THEOREM p' = 0 => (p = 0)'
+OBVIOUS
+
+THEOREM p[1]' = 0 => (p[1] = 0)'
+OBVIOUS
+
+THEOREM /\ p = [ i \in ProcSet |-> 0]
+        /\ p' = [p EXCEPT ![1] = 1]
+        =>
+        (p[1] = 1)'
+<1> QED BY DEF ProcSet
+
+THEOREM /\ p \in [ ProcSet -> 0..2]
+        /\ p' = [p EXCEPT ![1] = 1]
+        =>
+        (p[1] = 1)'
+<1> QED BY DEF ProcSet
+
+THEOREM /\ p \in [{1} \cup {2} -> 1..2]
+        /\ p' = [p EXCEPT ![2] = 1]
+        =>
+        (p \in [{1} \cup {2} -> 1..2])'
+OBVIOUS
+
+
 A == [a : {1,2} \cup {defaultInitValue}, b : {1,2}]
 B == [a |-> 1, b |-> 2]
 \*C == [self \in ProcSet |-> B \o << >>]
@@ -544,5 +574,5 @@ THEOREM stack \in [{1} \cup {2} ->
 
 =============================================================================
 \* Modification History
-\* Last modified Tue May 11 10:21:08 PDT 2021 by uber
+\* Last modified Mon Jun 14 12:33:11 PDT 2021 by uber
 \* Created Mon Apr 26 07:25:44 PDT 2021 by uber
