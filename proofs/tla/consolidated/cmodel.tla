@@ -47,6 +47,11 @@ variables
     call_stack = 3,
     memory_load_return = 0;
 
+(*
+    low-level memory load operation
+    p = CPU index, c = uobjcoll index, o = uobject index, l = boolean which
+    is true if legacy code, else false
+*)
 procedure memory_load(p, c, o, l) begin
 Start:
 if l then
@@ -66,6 +71,12 @@ L_Done:
 end if;
 end procedure;
 
+(*
+    low-level memory store operation
+    p = CPU index, c = uobjcoll index, o = uobject index, l = boolean which
+    is true if legacy code, else false
+    val = value to be stored
+*)
 procedure memory_store(p, c, o, l, val) begin
 Start:
 if l then
