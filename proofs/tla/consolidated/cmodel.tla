@@ -24,6 +24,10 @@ TLB_TYPE_NONE     == 0
 TLB_TYPE_SENTINEL == 1
 TLB_TYPE_UOBJCOLL == 2
 TLB_TYPE_LEGACY   == 3
+TLB_TYPE_INITMETHOD_ENTRYSENTINEL  == 4
+TLB_TYPE_PUBLICMETHOD_ENTRYSENTINEL == 5
+TLB_TYPE_RESUMEMETHOD_ENTRYSENTINEL == 6
+
 
 TLB_OP_READ    == 1
 TLB_OP_WRITE   == 2
@@ -36,21 +40,50 @@ MEM_SIZE == 268435456 \*0x10000000 = 256MB
 
 \* the following are defined assuming a total physical memory of // 0x10000000 = 256MB
 
-UOBJCOLL_SENTINEL_PHYSICAL_ADDR_BASE    == 0 \*0x00000000
-UOBJCOLL_SENTINEL_PHYSICAL_ADDR_SIZE    == 131072 \* 0x00020000
-UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_BASE == 8192 \* 0x00002000
-UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_SIZE == 16777216 \* 0x01000000
-LEGACY_PHYSICAL_ADDR_BASE               == 16777216 \*0x01000000
-LEGACY_PHYSICAL_ADDR_SIZE               == 251658240 \*0x0F000000
 
-\* the following are defined assuming a 32-bit linear addressing space // that permits addressing from 0x00000000 through 0xFFFFFFFF // note the following addresses are initialized to non-overlapping // and can be part of either first stage page-tables, second stage page-tables // or even regular segmentation
+
+UOBJCOLL_SENTINEL_PHYSICAL_ADDR_BASE    == 0 \*0x000000006
+UOBJCOLL_SENTINEL_PHYSICAL_ADDR_SIZE    == 393216 \* 0x00060000
+
+UOBJCOLL_INITMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE == 0
+UOBJCOLL_INITMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE == 131072
+
+UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE == 131072
+UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE == 131072
+
+UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE == 262144
+UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE == 131072
+
+UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_BASE == 393216 \* 0x00060000
+UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_SIZE == 16777216 \* 0x01000000
+LEGACY_PHYSICAL_ADDR_BASE               == 17170432 \*0x01060000
+LEGACY_PHYSICAL_ADDR_SIZE               == 251265024 \*0x0EFA0000
+
+(* the following are defined assuming a 32-bit linear addressing space 
+ that permits addressing from 0x00000000 through 0xFFFFFFFF 
+ note the following addresses are initialized to non-overlapping 
+ and can be part of either first stage page-tables, second stage page-tables 
+ or even regular segmentation
+*)
 
 UOBJCOLL_SENTINEL_LINEAR_ADDR_BASE    == 268435456 \*0x10000000
-UOBJCOLL_SENTINEL_LINEAR_ADDR_SIZE    == 268566528 \*0x10020000
-UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE == 268566528 \*0x10002000
-UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE == 285212672 \*0x11000000
-LEGACY_LINEAR_ADDR_BASE               == 285212672 \*0x11000000
-LEGACY_LINEAR_ADDR_SIZE               == 520093696 \*0x1F000000
+UOBJCOLL_SENTINEL_LINEAR_ADDR_SIZE    == 393216 \*0x00060000
+
+UOBJCOLL_INITMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE == 268435456 \* 0x10000000
+UOBJCOLL_INITMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE == 131072 \* 0x00020000
+
+UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE == 268566528 \* 0x10020000
+UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE == 131072 \* 0x00020000
+
+UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE == 268697600 \* 0x10040000
+UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE == 131072 \* 0x00020000
+
+UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE == 268828672 \* 0x10060000
+UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE == 16777216 \* 0x01000000
+
+LEGACY_LINEAR_ADDR_BASE == 285605888 \* 0x11060000
+LEGACY_LINEAR_ADDR_SIZE == 251265024 \* 0x0EFA0000
+
 
 nondet_u8  == 0
 nondet_u32 == {0,1,2,3}
@@ -506,58 +539,58 @@ end process;
 
 end algorithm; *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "32aae2f3" /\ chksum(tla) = "4eede27d")
-\* Label Start of procedure memory_load at line 120 col 1 changed to Start_
-\* Label Start of procedure memory_store at line 145 col 1 changed to Start_m
-\* Label Start of procedure tlb_init at line 167 col 5 changed to Start_t
-\* Label Loop of procedure tlb_type at line 218 col 5 changed to Loop_
-\* Label Inc of procedure tlb_type at line 224 col 9 changed to Inc_
-\* Label Loop of procedure tlb_lookup at line 235 col 5 changed to Loop_t
-\* Label Start of procedure x_memory_load at line 255 col 5 changed to Start_x
-\* Label Start of procedure x_memory_store at line 262 col 5 changed to Start_x_
-\* Label Start of procedure cpu_read at line 271 col 5 changed to Start_c
-\* Label Return of procedure cpu_read at line 273 col 5 changed to Return_
-\* Label End of procedure cpu_read at line 283 col 5 changed to End_
-\* Label Start of procedure cpu_write at line 289 col 5 changed to Start_cp
-\* Label Return of procedure cpu_write at line 291 col 5 changed to Return_c
-\* Label End of procedure cpu_write at line 300 col 5 changed to End_c
-\* Label Start of procedure cpu_execute at line 307 col 5 changed to Start_cpu
-\* Label Return of procedure cpu_execute at line 309 col 5 changed to Return_cp
-\* Label End of procedure cpu_execute at line 324 col 5 changed to End_cp
-\* Label Start of procedure Cpu_process at line 339 col 5 changed to Start_C
-\* Label Call of procedure Cpu_process at line 345 col 9 changed to Call_
-\* Label Start of procedure Legacy_code at line 365 col 5 changed to Start_L
-\* Label Start of procedure Uobjcollection_code at line 418 col 5 changed to Start_U
-\* Label Start of procedure Uobject_code at line 438 col 5 changed to Start_Uo
-\* Label End of procedure Uobject_code at line 474 col 5 changed to End_U
-\* Label A of process one at line 493 col 5 changed to A_
-\* Procedure variable status of procedure cpu_read at line 268 col 15 changed to status_
-\* Procedure variable paddr of procedure cpu_read at line 268 col 23 changed to paddr_
-\* Procedure variable collection of procedure Cpu_process at line 336 col 15 changed to collection_
-\* Parameter p of procedure memory_load at line 118 col 23 changed to p_
-\* Parameter c of procedure memory_load at line 118 col 26 changed to c_
-\* Parameter o of procedure memory_load at line 118 col 29 changed to o_
-\* Parameter l of procedure memory_load at line 118 col 32 changed to l_
-\* Parameter p of procedure memory_store at line 143 col 24 changed to p_m
-\* Parameter c of procedure memory_store at line 143 col 27 changed to c_m
-\* Parameter o of procedure memory_store at line 143 col 30 changed to o_m
-\* Parameter val of procedure memory_store at line 143 col 36 changed to val_
-\* Parameter addr of procedure tlb_type at line 214 col 20 changed to addr_
-\* Parameter addr of procedure tlb_lookup at line 231 col 22 changed to addr_t
-\* Parameter addr of procedure x_memory_load at line 253 col 25 changed to addr_x
-\* Parameter addr of procedure x_memory_store at line 260 col 26 changed to addr_x_
-\* Parameter addr of procedure cpu_read at line 267 col 20 changed to addr_c
-\* Parameter level of procedure cpu_read at line 267 col 26 changed to level_
-\* Parameter addr of procedure cpu_write at line 287 col 21 changed to addr_cp
-\* Parameter level of procedure cpu_write at line 287 col 27 changed to level_c
-\* Parameter p of procedure Cpu_process at line 335 col 23 changed to p_C
-\* Parameter p of procedure Legacy_code at line 361 col 23 changed to p_L
-\* Parameter saved_pc of procedure Legacy_code at line 361 col 26 changed to saved_pc_
-\* Parameter p of procedure Uobjcollection_code at line 416 col 31 changed to p_U
-\* Parameter c of procedure Uobjcollection_code at line 416 col 34 changed to c_U
-\* Parameter saved_pc of procedure Uobjcollection_code at line 416 col 37 changed to saved_pc_U
-\* Parameter p of procedure Uobject_code at line 433 col 24 changed to p_Uo
-\* Parameter saved_pc of procedure Uobject_code at line 433 col 33 changed to saved_pc_Uo
+\* BEGIN TRANSLATION (chksum(pcal) = "32aae2f3" /\ chksum(tla) = "95ab5986")
+\* Label Start of procedure memory_load at line 153 col 1 changed to Start_
+\* Label Start of procedure memory_store at line 178 col 1 changed to Start_m
+\* Label Start of procedure tlb_init at line 200 col 5 changed to Start_t
+\* Label Loop of procedure tlb_type at line 251 col 5 changed to Loop_
+\* Label Inc of procedure tlb_type at line 257 col 9 changed to Inc_
+\* Label Loop of procedure tlb_lookup at line 268 col 5 changed to Loop_t
+\* Label Start of procedure x_memory_load at line 288 col 5 changed to Start_x
+\* Label Start of procedure x_memory_store at line 295 col 5 changed to Start_x_
+\* Label Start of procedure cpu_read at line 304 col 5 changed to Start_c
+\* Label Return of procedure cpu_read at line 306 col 5 changed to Return_
+\* Label End of procedure cpu_read at line 316 col 5 changed to End_
+\* Label Start of procedure cpu_write at line 322 col 5 changed to Start_cp
+\* Label Return of procedure cpu_write at line 324 col 5 changed to Return_c
+\* Label End of procedure cpu_write at line 333 col 5 changed to End_c
+\* Label Start of procedure cpu_execute at line 340 col 5 changed to Start_cpu
+\* Label Return of procedure cpu_execute at line 342 col 5 changed to Return_cp
+\* Label End of procedure cpu_execute at line 357 col 5 changed to End_cp
+\* Label Start of procedure Cpu_process at line 372 col 5 changed to Start_C
+\* Label Call of procedure Cpu_process at line 378 col 9 changed to Call_
+\* Label Start of procedure Legacy_code at line 398 col 5 changed to Start_L
+\* Label Start of procedure Uobjcollection_code at line 451 col 5 changed to Start_U
+\* Label Start of procedure Uobject_code at line 471 col 5 changed to Start_Uo
+\* Label End of procedure Uobject_code at line 507 col 5 changed to End_U
+\* Label A of process one at line 526 col 5 changed to A_
+\* Procedure variable status of procedure cpu_read at line 301 col 15 changed to status_
+\* Procedure variable paddr of procedure cpu_read at line 301 col 23 changed to paddr_
+\* Procedure variable collection of procedure Cpu_process at line 369 col 15 changed to collection_
+\* Parameter p of procedure memory_load at line 151 col 23 changed to p_
+\* Parameter c of procedure memory_load at line 151 col 26 changed to c_
+\* Parameter o of procedure memory_load at line 151 col 29 changed to o_
+\* Parameter l of procedure memory_load at line 151 col 32 changed to l_
+\* Parameter p of procedure memory_store at line 176 col 24 changed to p_m
+\* Parameter c of procedure memory_store at line 176 col 27 changed to c_m
+\* Parameter o of procedure memory_store at line 176 col 30 changed to o_m
+\* Parameter val of procedure memory_store at line 176 col 36 changed to val_
+\* Parameter addr of procedure tlb_type at line 247 col 20 changed to addr_
+\* Parameter addr of procedure tlb_lookup at line 264 col 22 changed to addr_t
+\* Parameter addr of procedure x_memory_load at line 286 col 25 changed to addr_x
+\* Parameter addr of procedure x_memory_store at line 293 col 26 changed to addr_x_
+\* Parameter addr of procedure cpu_read at line 300 col 20 changed to addr_c
+\* Parameter level of procedure cpu_read at line 300 col 26 changed to level_
+\* Parameter addr of procedure cpu_write at line 320 col 21 changed to addr_cp
+\* Parameter level of procedure cpu_write at line 320 col 27 changed to level_c
+\* Parameter p of procedure Cpu_process at line 368 col 23 changed to p_C
+\* Parameter p of procedure Legacy_code at line 394 col 23 changed to p_L
+\* Parameter saved_pc of procedure Legacy_code at line 394 col 26 changed to saved_pc_
+\* Parameter p of procedure Uobjcollection_code at line 449 col 31 changed to p_U
+\* Parameter c of procedure Uobjcollection_code at line 449 col 34 changed to c_U
+\* Parameter saved_pc of procedure Uobjcollection_code at line 449 col 37 changed to saved_pc_U
+\* Parameter p of procedure Uobject_code at line 466 col 24 changed to p_Uo
+\* Parameter saved_pc of procedure Uobject_code at line 466 col 33 changed to saved_pc_Uo
 CONSTANT defaultInitValue
 VARIABLES Cpu, memory, call_stack, memory_load_return, x_memory_load_return, 
           tlb, tlb_type_return, tlb_lookup_return, memory_paddr, pc, stack, 
