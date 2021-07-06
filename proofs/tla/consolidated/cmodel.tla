@@ -212,35 +212,82 @@ TLB_4:
 TLB_5:    
     tlb[0].type := TLB_TYPE_SENTINEL;
 
-TLB_6:
-    tlb[1].linear_addr_base := UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE;
-TLB_7:    
-    tlb[1].linear_addr_size := UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE;
-TLB_8:    
-    tlb[1].physical_addr_base := UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_BASE;
-TLB_9:    
-    tlb[1].physical_addr_size := UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_SIZE;
-TLB_10:    
-    tlb[1].rpl := PRIVILEGE_LEVEL_UOBJCOLL;
+TLB_6:    
+    tlb[1].linear_addr_base := UOBJCOLL_INITMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE;
+TLB_7:
+    tlb[1].linear_addr_size := UOBJCOLL_INITMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE;
+TLB_8:
+    tlb[1].physical_addr_base := UOBJCOLL_INITMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE;
+TLB_9:
+    tlb[1].physical_addr_size := UOBJCOLL_INITMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE;
+TLB_10:
+    tlb[1].rpl := PRIVILEGE_LEVEL_LEGACY;
 TLB_11:    
-    tlb[1].op_mask := {TLB_OP_READ, TLB_OP_WRITE, TLB_OP_EXECUTE}; \* TLB_OP_READ | TLB_OP_WRITE | TLB_OP_EXECUTE;
+    tlb[1].op_mask := {TLB_OP_READ, TLB_OP_EXECUTE}; \* TLB_OP_READ | TLB_OP_EXECUTE;
 TLB_12:    
-    tlb[1].type := TLB_TYPE_UOBJCOLL;
+    tlb[1].type := TLB_TYPE_INITMETHOD_ENTRYSENTINEL;
 
-TLB_13:
-    tlb[2].linear_addr_base := LEGACY_LINEAR_ADDR_BASE;
-TLB_14:    
-    tlb[2].linear_addr_size := LEGACY_LINEAR_ADDR_SIZE;
-TLB_15:    
-    tlb[2].physical_addr_base := LEGACY_PHYSICAL_ADDR_BASE;
-TLB_16:    
-    tlb[2].physical_addr_size := LEGACY_PHYSICAL_ADDR_SIZE;
-TLB_17:    
+TLB_13:    
+    tlb[2].linear_addr_base := UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE;
+TLB_14:
+    tlb[2].linear_addr_size := UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE;
+TLB_15:
+    tlb[2].physical_addr_base := UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE;
+TLB_16:
+    tlb[2].physical_addr_size := UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE;
+TLB_17:
     tlb[2].rpl := PRIVILEGE_LEVEL_LEGACY;
 TLB_18:    
-    tlb[2].op_mask := {TLB_OP_READ, TLB_OP_WRITE, TLB_OP_EXECUTE}; \* TLB_OP_READ | TLB_OP_WRITE | TLB_OP_EXECUTE;
+    tlb[2].op_mask := {TLB_OP_READ, TLB_OP_EXECUTE}; \* TLB_OP_READ | TLB_OP_EXECUTE;
 TLB_19:    
-    tlb[2].type := TLB_TYPE_LEGACY;
+    tlb[2].type := TLB_TYPE_PUBLICMETHOD_ENTRYSENTINEL;
+
+
+TLB_20:    
+    tlb[3].linear_addr_base := UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE;
+TLB_21:
+    tlb[3].linear_addr_size := UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE;
+TLB_22:
+    tlb[3].physical_addr_base := UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE;
+TLB_23:
+    tlb[3].physical_addr_size := UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE;
+TLB_24:
+    tlb[3].rpl := PRIVILEGE_LEVEL_LEGACY;
+TLB_25:    
+    tlb[3].op_mask := {TLB_OP_READ, TLB_OP_EXECUTE}; \* TLB_OP_READ | TLB_OP_EXECUTE;
+TLB_26:    
+    tlb[3].type := TLB_TYPE_RESUMEMETHOD_ENTRYSENTINEL;
+
+
+TLB_27:
+    tlb[4].linear_addr_base := UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE;
+TLB_28:    
+    tlb[4].linear_addr_size := UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE;
+TLB_29:    
+    tlb[4].physical_addr_base := UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_BASE;
+TLB_30:    
+    tlb[4].physical_addr_size := UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_SIZE;
+TLB_31:    
+    tlb[4].rpl := PRIVILEGE_LEVEL_UOBJCOLL;
+TLB_32:    
+    tlb[4].op_mask := {TLB_OP_READ, TLB_OP_WRITE, TLB_OP_EXECUTE}; \* TLB_OP_READ | TLB_OP_WRITE | TLB_OP_EXECUTE;
+TLB_33:    
+    tlb[4].type := TLB_TYPE_UOBJCOLL;
+
+TLB_34:
+    tlb[5].linear_addr_base := LEGACY_LINEAR_ADDR_BASE;
+TLB_35:    
+    tlb[5].linear_addr_size := LEGACY_LINEAR_ADDR_SIZE;
+TLB_36:    
+    tlb[5].physical_addr_base := LEGACY_PHYSICAL_ADDR_BASE;
+TLB_37:    
+    tlb[5].physical_addr_size := LEGACY_PHYSICAL_ADDR_SIZE;
+TLB_38:    
+    tlb[5].rpl := PRIVILEGE_LEVEL_LEGACY;
+TLB_39:    
+    tlb[5].op_mask := {TLB_OP_READ, TLB_OP_WRITE, TLB_OP_EXECUTE}; \* TLB_OP_READ | TLB_OP_WRITE | TLB_OP_EXECUTE;
+TLB_40:    
+    tlb[5].type := TLB_TYPE_LEGACY;
     return;
 end procedure;
 
@@ -540,34 +587,34 @@ end process;
 
 end algorithm; *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "39f153db" /\ chksum(tla) = "7c2efc94")
+\* BEGIN TRANSLATION (chksum(pcal) = "9209b4d8" /\ chksum(tla) = "32e101d6")
 \* Label Start of procedure memory_load at line 154 col 1 changed to Start_
 \* Label Start of procedure memory_store at line 179 col 1 changed to Start_m
 \* Label Start of procedure tlb_init at line 201 col 5 changed to Start_t
-\* Label Loop of procedure tlb_type at line 252 col 5 changed to Loop_
-\* Label Inc of procedure tlb_type at line 258 col 9 changed to Inc_
-\* Label Loop of procedure tlb_lookup at line 269 col 5 changed to Loop_t
-\* Label Start of procedure x_memory_load at line 289 col 5 changed to Start_x
-\* Label Start of procedure x_memory_store at line 296 col 5 changed to Start_x_
-\* Label Start of procedure cpu_read at line 305 col 5 changed to Start_c
-\* Label Return of procedure cpu_read at line 307 col 5 changed to Return_
-\* Label End of procedure cpu_read at line 317 col 5 changed to End_
-\* Label Start of procedure cpu_write at line 323 col 5 changed to Start_cp
-\* Label Return of procedure cpu_write at line 325 col 5 changed to Return_c
-\* Label End of procedure cpu_write at line 334 col 5 changed to End_c
-\* Label Start of procedure cpu_execute at line 341 col 5 changed to Start_cpu
-\* Label Return of procedure cpu_execute at line 343 col 5 changed to Return_cp
-\* Label End of procedure cpu_execute at line 358 col 5 changed to End_cp
-\* Label Start of procedure Cpu_process at line 373 col 5 changed to Start_C
-\* Label Call of procedure Cpu_process at line 379 col 9 changed to Call_
-\* Label Start of procedure Legacy_code at line 399 col 5 changed to Start_L
-\* Label Start of procedure Uobjcollection_code at line 452 col 5 changed to Start_U
-\* Label Start of procedure Uobject_code at line 472 col 5 changed to Start_Uo
-\* Label End of procedure Uobject_code at line 508 col 5 changed to End_U
-\* Label A of process one at line 527 col 5 changed to A_
-\* Procedure variable status of procedure cpu_read at line 302 col 15 changed to status_
-\* Procedure variable paddr of procedure cpu_read at line 302 col 23 changed to paddr_
-\* Procedure variable collection of procedure Cpu_process at line 370 col 15 changed to collection_
+\* Label Loop of procedure tlb_type at line 299 col 5 changed to Loop_
+\* Label Inc of procedure tlb_type at line 305 col 9 changed to Inc_
+\* Label Loop of procedure tlb_lookup at line 316 col 5 changed to Loop_t
+\* Label Start of procedure x_memory_load at line 336 col 5 changed to Start_x
+\* Label Start of procedure x_memory_store at line 343 col 5 changed to Start_x_
+\* Label Start of procedure cpu_read at line 352 col 5 changed to Start_c
+\* Label Return of procedure cpu_read at line 354 col 5 changed to Return_
+\* Label End of procedure cpu_read at line 364 col 5 changed to End_
+\* Label Start of procedure cpu_write at line 370 col 5 changed to Start_cp
+\* Label Return of procedure cpu_write at line 372 col 5 changed to Return_c
+\* Label End of procedure cpu_write at line 381 col 5 changed to End_c
+\* Label Start of procedure cpu_execute at line 388 col 5 changed to Start_cpu
+\* Label Return of procedure cpu_execute at line 390 col 5 changed to Return_cp
+\* Label End of procedure cpu_execute at line 405 col 5 changed to End_cp
+\* Label Start of procedure Cpu_process at line 420 col 5 changed to Start_C
+\* Label Call of procedure Cpu_process at line 426 col 9 changed to Call_
+\* Label Start of procedure Legacy_code at line 446 col 5 changed to Start_L
+\* Label Start of procedure Uobjcollection_code at line 499 col 5 changed to Start_U
+\* Label Start of procedure Uobject_code at line 519 col 5 changed to Start_Uo
+\* Label End of procedure Uobject_code at line 555 col 5 changed to End_U
+\* Label A of process one at line 574 col 5 changed to A_
+\* Procedure variable status of procedure cpu_read at line 349 col 15 changed to status_
+\* Procedure variable paddr of procedure cpu_read at line 349 col 23 changed to paddr_
+\* Procedure variable collection of procedure Cpu_process at line 417 col 15 changed to collection_
 \* Parameter p of procedure memory_load at line 152 col 23 changed to p_
 \* Parameter c of procedure memory_load at line 152 col 26 changed to c_
 \* Parameter o of procedure memory_load at line 152 col 29 changed to o_
@@ -576,22 +623,22 @@ end algorithm; *)
 \* Parameter c of procedure memory_store at line 177 col 27 changed to c_m
 \* Parameter o of procedure memory_store at line 177 col 30 changed to o_m
 \* Parameter val of procedure memory_store at line 177 col 36 changed to val_
-\* Parameter addr of procedure tlb_type at line 248 col 20 changed to addr_
-\* Parameter addr of procedure tlb_lookup at line 265 col 22 changed to addr_t
-\* Parameter addr of procedure x_memory_load at line 287 col 25 changed to addr_x
-\* Parameter addr of procedure x_memory_store at line 294 col 26 changed to addr_x_
-\* Parameter addr of procedure cpu_read at line 301 col 20 changed to addr_c
-\* Parameter level of procedure cpu_read at line 301 col 26 changed to level_
-\* Parameter addr of procedure cpu_write at line 321 col 21 changed to addr_cp
-\* Parameter level of procedure cpu_write at line 321 col 27 changed to level_c
-\* Parameter p of procedure Cpu_process at line 369 col 23 changed to p_C
-\* Parameter p of procedure Legacy_code at line 395 col 23 changed to p_L
-\* Parameter saved_pc of procedure Legacy_code at line 395 col 26 changed to saved_pc_
-\* Parameter p of procedure Uobjcollection_code at line 450 col 31 changed to p_U
-\* Parameter c of procedure Uobjcollection_code at line 450 col 34 changed to c_U
-\* Parameter saved_pc of procedure Uobjcollection_code at line 450 col 37 changed to saved_pc_U
-\* Parameter p of procedure Uobject_code at line 467 col 24 changed to p_Uo
-\* Parameter saved_pc of procedure Uobject_code at line 467 col 33 changed to saved_pc_Uo
+\* Parameter addr of procedure tlb_type at line 295 col 20 changed to addr_
+\* Parameter addr of procedure tlb_lookup at line 312 col 22 changed to addr_t
+\* Parameter addr of procedure x_memory_load at line 334 col 25 changed to addr_x
+\* Parameter addr of procedure x_memory_store at line 341 col 26 changed to addr_x_
+\* Parameter addr of procedure cpu_read at line 348 col 20 changed to addr_c
+\* Parameter level of procedure cpu_read at line 348 col 26 changed to level_
+\* Parameter addr of procedure cpu_write at line 368 col 21 changed to addr_cp
+\* Parameter level of procedure cpu_write at line 368 col 27 changed to level_c
+\* Parameter p of procedure Cpu_process at line 416 col 23 changed to p_C
+\* Parameter p of procedure Legacy_code at line 442 col 23 changed to p_L
+\* Parameter saved_pc of procedure Legacy_code at line 442 col 26 changed to saved_pc_
+\* Parameter p of procedure Uobjcollection_code at line 497 col 31 changed to p_U
+\* Parameter c of procedure Uobjcollection_code at line 497 col 34 changed to c_U
+\* Parameter saved_pc of procedure Uobjcollection_code at line 497 col 37 changed to saved_pc_U
+\* Parameter p of procedure Uobject_code at line 514 col 24 changed to p_Uo
+\* Parameter saved_pc of procedure Uobject_code at line 514 col 33 changed to saved_pc_Uo
 CONSTANT defaultInitValue
 VARIABLES Cpu, memory, call_stack, memory_load_return, x_memory_load_return, 
           tlb, tlb_type_return, tlb_lookup_return, memory_paddr, pc, stack, 
@@ -1009,7 +1056,7 @@ TLB_5(self) == /\ pc[self] = "TLB_5"
                                In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_6(self) == /\ pc[self] = "TLB_6"
-               /\ tlb' = [tlb EXCEPT ![1].linear_addr_base = UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE]
+               /\ tlb' = [tlb EXCEPT ![1].linear_addr_base = UOBJCOLL_INITMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE]
                /\ pc' = [pc EXCEPT ![self] = "TLB_7"]
                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                x_memory_load_return, tlb_type_return, 
@@ -1024,7 +1071,7 @@ TLB_6(self) == /\ pc[self] = "TLB_6"
                                In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_7(self) == /\ pc[self] = "TLB_7"
-               /\ tlb' = [tlb EXCEPT ![1].linear_addr_size = UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE]
+               /\ tlb' = [tlb EXCEPT ![1].linear_addr_size = UOBJCOLL_INITMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE]
                /\ pc' = [pc EXCEPT ![self] = "TLB_8"]
                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                x_memory_load_return, tlb_type_return, 
@@ -1039,7 +1086,7 @@ TLB_7(self) == /\ pc[self] = "TLB_7"
                                In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_8(self) == /\ pc[self] = "TLB_8"
-               /\ tlb' = [tlb EXCEPT ![1].physical_addr_base = UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_BASE]
+               /\ tlb' = [tlb EXCEPT ![1].physical_addr_base = UOBJCOLL_INITMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE]
                /\ pc' = [pc EXCEPT ![self] = "TLB_9"]
                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                x_memory_load_return, tlb_type_return, 
@@ -1054,7 +1101,7 @@ TLB_8(self) == /\ pc[self] = "TLB_8"
                                In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_9(self) == /\ pc[self] = "TLB_9"
-               /\ tlb' = [tlb EXCEPT ![1].physical_addr_size = UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_SIZE]
+               /\ tlb' = [tlb EXCEPT ![1].physical_addr_size = UOBJCOLL_INITMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE]
                /\ pc' = [pc EXCEPT ![self] = "TLB_10"]
                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                x_memory_load_return, tlb_type_return, 
@@ -1069,7 +1116,7 @@ TLB_9(self) == /\ pc[self] = "TLB_9"
                                In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_10(self) == /\ pc[self] = "TLB_10"
-                /\ tlb' = [tlb EXCEPT ![1].rpl = PRIVILEGE_LEVEL_UOBJCOLL]
+                /\ tlb' = [tlb EXCEPT ![1].rpl = PRIVILEGE_LEVEL_LEGACY]
                 /\ pc' = [pc EXCEPT ![self] = "TLB_11"]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                 x_memory_load_return, tlb_type_return, 
@@ -1084,7 +1131,7 @@ TLB_10(self) == /\ pc[self] = "TLB_10"
                                 In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_11(self) == /\ pc[self] = "TLB_11"
-                /\ tlb' = [tlb EXCEPT ![1].op_mask = {TLB_OP_READ, TLB_OP_WRITE, TLB_OP_EXECUTE}]
+                /\ tlb' = [tlb EXCEPT ![1].op_mask = {TLB_OP_READ, TLB_OP_EXECUTE}]
                 /\ pc' = [pc EXCEPT ![self] = "TLB_12"]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                 x_memory_load_return, tlb_type_return, 
@@ -1099,7 +1146,7 @@ TLB_11(self) == /\ pc[self] = "TLB_11"
                                 In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_12(self) == /\ pc[self] = "TLB_12"
-                /\ tlb' = [tlb EXCEPT ![1].type = TLB_TYPE_UOBJCOLL]
+                /\ tlb' = [tlb EXCEPT ![1].type = TLB_TYPE_INITMETHOD_ENTRYSENTINEL]
                 /\ pc' = [pc EXCEPT ![self] = "TLB_13"]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                 x_memory_load_return, tlb_type_return, 
@@ -1114,7 +1161,7 @@ TLB_12(self) == /\ pc[self] = "TLB_12"
                                 In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_13(self) == /\ pc[self] = "TLB_13"
-                /\ tlb' = [tlb EXCEPT ![2].linear_addr_base = LEGACY_LINEAR_ADDR_BASE]
+                /\ tlb' = [tlb EXCEPT ![2].linear_addr_base = UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE]
                 /\ pc' = [pc EXCEPT ![self] = "TLB_14"]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                 x_memory_load_return, tlb_type_return, 
@@ -1129,7 +1176,7 @@ TLB_13(self) == /\ pc[self] = "TLB_13"
                                 In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_14(self) == /\ pc[self] = "TLB_14"
-                /\ tlb' = [tlb EXCEPT ![2].linear_addr_size = LEGACY_LINEAR_ADDR_SIZE]
+                /\ tlb' = [tlb EXCEPT ![2].linear_addr_size = UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE]
                 /\ pc' = [pc EXCEPT ![self] = "TLB_15"]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                 x_memory_load_return, tlb_type_return, 
@@ -1144,7 +1191,7 @@ TLB_14(self) == /\ pc[self] = "TLB_14"
                                 In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_15(self) == /\ pc[self] = "TLB_15"
-                /\ tlb' = [tlb EXCEPT ![2].physical_addr_base = LEGACY_PHYSICAL_ADDR_BASE]
+                /\ tlb' = [tlb EXCEPT ![2].physical_addr_base = UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE]
                 /\ pc' = [pc EXCEPT ![self] = "TLB_16"]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                 x_memory_load_return, tlb_type_return, 
@@ -1159,7 +1206,7 @@ TLB_15(self) == /\ pc[self] = "TLB_15"
                                 In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_16(self) == /\ pc[self] = "TLB_16"
-                /\ tlb' = [tlb EXCEPT ![2].physical_addr_size = LEGACY_PHYSICAL_ADDR_SIZE]
+                /\ tlb' = [tlb EXCEPT ![2].physical_addr_size = UOBJCOLL_PUBLICMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE]
                 /\ pc' = [pc EXCEPT ![self] = "TLB_17"]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                 x_memory_load_return, tlb_type_return, 
@@ -1189,7 +1236,7 @@ TLB_17(self) == /\ pc[self] = "TLB_17"
                                 In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_18(self) == /\ pc[self] = "TLB_18"
-                /\ tlb' = [tlb EXCEPT ![2].op_mask = {TLB_OP_READ, TLB_OP_WRITE, TLB_OP_EXECUTE}]
+                /\ tlb' = [tlb EXCEPT ![2].op_mask = {TLB_OP_READ, TLB_OP_EXECUTE}]
                 /\ pc' = [pc EXCEPT ![self] = "TLB_19"]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
                                 x_memory_load_return, tlb_type_return, 
@@ -1204,7 +1251,322 @@ TLB_18(self) == /\ pc[self] = "TLB_18"
                                 In_uobj, Uobj_finished, p, saved_pc >>
 
 TLB_19(self) == /\ pc[self] = "TLB_19"
-                /\ tlb' = [tlb EXCEPT ![2].type = TLB_TYPE_LEGACY]
+                /\ tlb' = [tlb EXCEPT ![2].type = TLB_TYPE_PUBLICMETHOD_ENTRYSENTINEL]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_20"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_20(self) == /\ pc[self] = "TLB_20"
+                /\ tlb' = [tlb EXCEPT ![3].linear_addr_base = UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_LINEAR_ADDR_BASE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_21"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_21(self) == /\ pc[self] = "TLB_21"
+                /\ tlb' = [tlb EXCEPT ![3].linear_addr_size = UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_LINEAR_ADDR_SIZE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_22"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_22(self) == /\ pc[self] = "TLB_22"
+                /\ tlb' = [tlb EXCEPT ![3].physical_addr_base = UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_BASE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_23"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_23(self) == /\ pc[self] = "TLB_23"
+                /\ tlb' = [tlb EXCEPT ![3].physical_addr_size = UOBJCOLL_RESUMEMETHOD_ENTRYSENTINEL_PHYSICAL_ADDR_SIZE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_24"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_24(self) == /\ pc[self] = "TLB_24"
+                /\ tlb' = [tlb EXCEPT ![3].rpl = PRIVILEGE_LEVEL_LEGACY]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_25"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_25(self) == /\ pc[self] = "TLB_25"
+                /\ tlb' = [tlb EXCEPT ![3].op_mask = {TLB_OP_READ, TLB_OP_EXECUTE}]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_26"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_26(self) == /\ pc[self] = "TLB_26"
+                /\ tlb' = [tlb EXCEPT ![3].type = TLB_TYPE_RESUMEMETHOD_ENTRYSENTINEL]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_27"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_27(self) == /\ pc[self] = "TLB_27"
+                /\ tlb' = [tlb EXCEPT ![4].linear_addr_base = UOBJCOLL_NONSENTINEL_LINEAR_ADDR_BASE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_28"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_28(self) == /\ pc[self] = "TLB_28"
+                /\ tlb' = [tlb EXCEPT ![4].linear_addr_size = UOBJCOLL_NONSENTINEL_LINEAR_ADDR_SIZE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_29"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_29(self) == /\ pc[self] = "TLB_29"
+                /\ tlb' = [tlb EXCEPT ![4].physical_addr_base = UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_BASE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_30"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_30(self) == /\ pc[self] = "TLB_30"
+                /\ tlb' = [tlb EXCEPT ![4].physical_addr_size = UOBJCOLL_NONSENTINEL_PHYSICAL_ADDR_SIZE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_31"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_31(self) == /\ pc[self] = "TLB_31"
+                /\ tlb' = [tlb EXCEPT ![4].rpl = PRIVILEGE_LEVEL_UOBJCOLL]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_32"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_32(self) == /\ pc[self] = "TLB_32"
+                /\ tlb' = [tlb EXCEPT ![4].op_mask = {TLB_OP_READ, TLB_OP_WRITE, TLB_OP_EXECUTE}]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_33"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_33(self) == /\ pc[self] = "TLB_33"
+                /\ tlb' = [tlb EXCEPT ![4].type = TLB_TYPE_UOBJCOLL]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_34"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_34(self) == /\ pc[self] = "TLB_34"
+                /\ tlb' = [tlb EXCEPT ![5].linear_addr_base = LEGACY_LINEAR_ADDR_BASE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_35"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_35(self) == /\ pc[self] = "TLB_35"
+                /\ tlb' = [tlb EXCEPT ![5].linear_addr_size = LEGACY_LINEAR_ADDR_SIZE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_36"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_36(self) == /\ pc[self] = "TLB_36"
+                /\ tlb' = [tlb EXCEPT ![5].physical_addr_base = LEGACY_PHYSICAL_ADDR_BASE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_37"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_37(self) == /\ pc[self] = "TLB_37"
+                /\ tlb' = [tlb EXCEPT ![5].physical_addr_size = LEGACY_PHYSICAL_ADDR_SIZE]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_38"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_38(self) == /\ pc[self] = "TLB_38"
+                /\ tlb' = [tlb EXCEPT ![5].rpl = PRIVILEGE_LEVEL_LEGACY]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_39"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_39(self) == /\ pc[self] = "TLB_39"
+                /\ tlb' = [tlb EXCEPT ![5].op_mask = {TLB_OP_READ, TLB_OP_WRITE, TLB_OP_EXECUTE}]
+                /\ pc' = [pc EXCEPT ![self] = "TLB_40"]
+                /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
+                                x_memory_load_return, tlb_type_return, 
+                                tlb_lookup_return, memory_paddr, stack, p_, c_, 
+                                o_, l_, p_m, c_m, o_m, l, val_, addr_, 
+                                tlb_type_i, addr_t, cpl, tlb_op_mask, 
+                                tlb_lookup_i, addr_x, addr_x_, val, addr_c, 
+                                level_, status_, paddr_, tmp, addr_cp, level_c, 
+                                addr, level, type, status, paddr, p_C, 
+                                collection_, p_L, saved_pc_, collection, p_U, 
+                                c_U, saved_pc_U, p_Uo, c, o, saved_pc_Uo, 
+                                In_uobj, Uobj_finished, p, saved_pc >>
+
+TLB_40(self) == /\ pc[self] = "TLB_40"
+                /\ tlb' = [tlb EXCEPT ![5].type = TLB_TYPE_LEGACY]
                 /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
                 /\ stack' = [stack EXCEPT ![self] = Tail(stack[self])]
                 /\ UNCHANGED << Cpu, memory, call_stack, memory_load_return, 
@@ -1226,6 +1588,13 @@ tlb_init(self) == Start_t(self) \/ TLB_0(self) \/ TLB_1(self)
                      \/ TLB_11(self) \/ TLB_12(self) \/ TLB_13(self)
                      \/ TLB_14(self) \/ TLB_15(self) \/ TLB_16(self)
                      \/ TLB_17(self) \/ TLB_18(self) \/ TLB_19(self)
+                     \/ TLB_20(self) \/ TLB_21(self) \/ TLB_22(self)
+                     \/ TLB_23(self) \/ TLB_24(self) \/ TLB_25(self)
+                     \/ TLB_26(self) \/ TLB_27(self) \/ TLB_28(self)
+                     \/ TLB_29(self) \/ TLB_30(self) \/ TLB_31(self)
+                     \/ TLB_32(self) \/ TLB_33(self) \/ TLB_34(self)
+                     \/ TLB_35(self) \/ TLB_36(self) \/ TLB_37(self)
+                     \/ TLB_38(self) \/ TLB_39(self) \/ TLB_40(self)
 
 Loop_(self) == /\ pc[self] = "Loop_"
                /\ IF tlb_type_i[self] < MAX_TLB_ENTRIES
