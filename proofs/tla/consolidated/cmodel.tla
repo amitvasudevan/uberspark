@@ -395,6 +395,16 @@ Ret_lookup:
     if status then
         if type = TLB_TYPE_SENTINEL then
             skip; \* call sentinel();   (* TODO: Represent sentinel *)
+        
+        elsif type = TLB_TYPE_INITMETHOD_ENTRYSENTINEL then
+            skip; \* TBD: call uobjcoll_initmethod_entrysentinel();
+        
+        elsif type = TLB_TYPE_PUBLICMETHOD_ENTRYSENTINEL then
+            skip; \* TBD: call uobjcoll_publicmethod_entrysentinel();;
+        
+        elsif type = TLB_TYPE_RESUMEMETHOD_ENTRYSENTINEL then
+            skip; \* TBD: call uobjcoll_resumemethod_entrysentinel();;
+
         else
             skip; \* call cpu_halt();
         end if;
@@ -587,7 +597,7 @@ end process;
 
 end algorithm; *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "9209b4d8" /\ chksum(tla) = "32e101d6")
+\* BEGIN TRANSLATION (chksum(pcal) = "8adcb3f5" /\ chksum(tla) = "247f8db3")
 \* Label Start of procedure memory_load at line 154 col 1 changed to Start_
 \* Label Start of procedure memory_store at line 179 col 1 changed to Start_m
 \* Label Start of procedure tlb_init at line 201 col 5 changed to Start_t
@@ -604,17 +614,17 @@ end algorithm; *)
 \* Label End of procedure cpu_write at line 381 col 5 changed to End_c
 \* Label Start of procedure cpu_execute at line 388 col 5 changed to Start_cpu
 \* Label Return of procedure cpu_execute at line 390 col 5 changed to Return_cp
-\* Label End of procedure cpu_execute at line 405 col 5 changed to End_cp
-\* Label Start of procedure Cpu_process at line 420 col 5 changed to Start_C
-\* Label Call of procedure Cpu_process at line 426 col 9 changed to Call_
-\* Label Start of procedure Legacy_code at line 446 col 5 changed to Start_L
-\* Label Start of procedure Uobjcollection_code at line 499 col 5 changed to Start_U
-\* Label Start of procedure Uobject_code at line 519 col 5 changed to Start_Uo
-\* Label End of procedure Uobject_code at line 555 col 5 changed to End_U
-\* Label A of process one at line 574 col 5 changed to A_
+\* Label End of procedure cpu_execute at line 415 col 5 changed to End_cp
+\* Label Start of procedure Cpu_process at line 430 col 5 changed to Start_C
+\* Label Call of procedure Cpu_process at line 436 col 9 changed to Call_
+\* Label Start of procedure Legacy_code at line 456 col 5 changed to Start_L
+\* Label Start of procedure Uobjcollection_code at line 509 col 5 changed to Start_U
+\* Label Start of procedure Uobject_code at line 529 col 5 changed to Start_Uo
+\* Label End of procedure Uobject_code at line 565 col 5 changed to End_U
+\* Label A of process one at line 584 col 5 changed to A_
 \* Procedure variable status of procedure cpu_read at line 349 col 15 changed to status_
 \* Procedure variable paddr of procedure cpu_read at line 349 col 23 changed to paddr_
-\* Procedure variable collection of procedure Cpu_process at line 417 col 15 changed to collection_
+\* Procedure variable collection of procedure Cpu_process at line 427 col 15 changed to collection_
 \* Parameter p of procedure memory_load at line 152 col 23 changed to p_
 \* Parameter c of procedure memory_load at line 152 col 26 changed to c_
 \* Parameter o of procedure memory_load at line 152 col 29 changed to o_
@@ -631,14 +641,14 @@ end algorithm; *)
 \* Parameter level of procedure cpu_read at line 348 col 26 changed to level_
 \* Parameter addr of procedure cpu_write at line 368 col 21 changed to addr_cp
 \* Parameter level of procedure cpu_write at line 368 col 27 changed to level_c
-\* Parameter p of procedure Cpu_process at line 416 col 23 changed to p_C
-\* Parameter p of procedure Legacy_code at line 442 col 23 changed to p_L
-\* Parameter saved_pc of procedure Legacy_code at line 442 col 26 changed to saved_pc_
-\* Parameter p of procedure Uobjcollection_code at line 497 col 31 changed to p_U
-\* Parameter c of procedure Uobjcollection_code at line 497 col 34 changed to c_U
-\* Parameter saved_pc of procedure Uobjcollection_code at line 497 col 37 changed to saved_pc_U
-\* Parameter p of procedure Uobject_code at line 514 col 24 changed to p_Uo
-\* Parameter saved_pc of procedure Uobject_code at line 514 col 33 changed to saved_pc_Uo
+\* Parameter p of procedure Cpu_process at line 426 col 23 changed to p_C
+\* Parameter p of procedure Legacy_code at line 452 col 23 changed to p_L
+\* Parameter saved_pc of procedure Legacy_code at line 452 col 26 changed to saved_pc_
+\* Parameter p of procedure Uobjcollection_code at line 507 col 31 changed to p_U
+\* Parameter c of procedure Uobjcollection_code at line 507 col 34 changed to c_U
+\* Parameter saved_pc of procedure Uobjcollection_code at line 507 col 37 changed to saved_pc_U
+\* Parameter p of procedure Uobject_code at line 524 col 24 changed to p_Uo
+\* Parameter saved_pc of procedure Uobject_code at line 524 col 33 changed to saved_pc_Uo
 CONSTANT defaultInitValue
 VARIABLES Cpu, memory, call_stack, memory_load_return, x_memory_load_return, 
           tlb, tlb_type_return, tlb_lookup_return, memory_paddr, pc, stack, 
@@ -1933,7 +1943,13 @@ Ret_lookup(self) == /\ pc[self] = "Ret_lookup"
                     /\ IF status'[self]
                           THEN /\ IF type[self] = TLB_TYPE_SENTINEL
                                      THEN /\ TRUE
-                                     ELSE /\ TRUE
+                                     ELSE /\ IF type[self] = TLB_TYPE_INITMETHOD_ENTRYSENTINEL
+                                                THEN /\ TRUE
+                                                ELSE /\ IF type[self] = TLB_TYPE_PUBLICMETHOD_ENTRYSENTINEL
+                                                           THEN /\ TRUE
+                                                           ELSE /\ IF type[self] = TLB_TYPE_RESUMEMETHOD_ENTRYSENTINEL
+                                                                      THEN /\ TRUE
+                                                                      ELSE /\ TRUE
                           ELSE /\ TRUE
                     /\ pc' = [pc EXCEPT ![self] = "End_cp"]
                     /\ UNCHANGED << Cpu, memory, call_stack, 
