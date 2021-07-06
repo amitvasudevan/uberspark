@@ -97,6 +97,7 @@ variables
             [Id |-> cp,                             \* unique CPU identifier
              Pc |-> [x \in 1..2 |-> 0],             \* program counter (currently abstracted to object control)
              Pr |-> 0,                              \* privelege level
+             sp |-> 0,      (* ADD : stack pointer *)
              Collection |-> 0,
              Object |-> 0,
              Shared_cpustate |-> 0,
@@ -539,58 +540,58 @@ end process;
 
 end algorithm; *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "32aae2f3" /\ chksum(tla) = "95ab5986")
-\* Label Start of procedure memory_load at line 153 col 1 changed to Start_
-\* Label Start of procedure memory_store at line 178 col 1 changed to Start_m
-\* Label Start of procedure tlb_init at line 200 col 5 changed to Start_t
-\* Label Loop of procedure tlb_type at line 251 col 5 changed to Loop_
-\* Label Inc of procedure tlb_type at line 257 col 9 changed to Inc_
-\* Label Loop of procedure tlb_lookup at line 268 col 5 changed to Loop_t
-\* Label Start of procedure x_memory_load at line 288 col 5 changed to Start_x
-\* Label Start of procedure x_memory_store at line 295 col 5 changed to Start_x_
-\* Label Start of procedure cpu_read at line 304 col 5 changed to Start_c
-\* Label Return of procedure cpu_read at line 306 col 5 changed to Return_
-\* Label End of procedure cpu_read at line 316 col 5 changed to End_
-\* Label Start of procedure cpu_write at line 322 col 5 changed to Start_cp
-\* Label Return of procedure cpu_write at line 324 col 5 changed to Return_c
-\* Label End of procedure cpu_write at line 333 col 5 changed to End_c
-\* Label Start of procedure cpu_execute at line 340 col 5 changed to Start_cpu
-\* Label Return of procedure cpu_execute at line 342 col 5 changed to Return_cp
-\* Label End of procedure cpu_execute at line 357 col 5 changed to End_cp
-\* Label Start of procedure Cpu_process at line 372 col 5 changed to Start_C
-\* Label Call of procedure Cpu_process at line 378 col 9 changed to Call_
-\* Label Start of procedure Legacy_code at line 398 col 5 changed to Start_L
-\* Label Start of procedure Uobjcollection_code at line 451 col 5 changed to Start_U
-\* Label Start of procedure Uobject_code at line 471 col 5 changed to Start_Uo
-\* Label End of procedure Uobject_code at line 507 col 5 changed to End_U
-\* Label A of process one at line 526 col 5 changed to A_
-\* Procedure variable status of procedure cpu_read at line 301 col 15 changed to status_
-\* Procedure variable paddr of procedure cpu_read at line 301 col 23 changed to paddr_
-\* Procedure variable collection of procedure Cpu_process at line 369 col 15 changed to collection_
-\* Parameter p of procedure memory_load at line 151 col 23 changed to p_
-\* Parameter c of procedure memory_load at line 151 col 26 changed to c_
-\* Parameter o of procedure memory_load at line 151 col 29 changed to o_
-\* Parameter l of procedure memory_load at line 151 col 32 changed to l_
-\* Parameter p of procedure memory_store at line 176 col 24 changed to p_m
-\* Parameter c of procedure memory_store at line 176 col 27 changed to c_m
-\* Parameter o of procedure memory_store at line 176 col 30 changed to o_m
-\* Parameter val of procedure memory_store at line 176 col 36 changed to val_
-\* Parameter addr of procedure tlb_type at line 247 col 20 changed to addr_
-\* Parameter addr of procedure tlb_lookup at line 264 col 22 changed to addr_t
-\* Parameter addr of procedure x_memory_load at line 286 col 25 changed to addr_x
-\* Parameter addr of procedure x_memory_store at line 293 col 26 changed to addr_x_
-\* Parameter addr of procedure cpu_read at line 300 col 20 changed to addr_c
-\* Parameter level of procedure cpu_read at line 300 col 26 changed to level_
-\* Parameter addr of procedure cpu_write at line 320 col 21 changed to addr_cp
-\* Parameter level of procedure cpu_write at line 320 col 27 changed to level_c
-\* Parameter p of procedure Cpu_process at line 368 col 23 changed to p_C
-\* Parameter p of procedure Legacy_code at line 394 col 23 changed to p_L
-\* Parameter saved_pc of procedure Legacy_code at line 394 col 26 changed to saved_pc_
-\* Parameter p of procedure Uobjcollection_code at line 449 col 31 changed to p_U
-\* Parameter c of procedure Uobjcollection_code at line 449 col 34 changed to c_U
-\* Parameter saved_pc of procedure Uobjcollection_code at line 449 col 37 changed to saved_pc_U
-\* Parameter p of procedure Uobject_code at line 466 col 24 changed to p_Uo
-\* Parameter saved_pc of procedure Uobject_code at line 466 col 33 changed to saved_pc_Uo
+\* BEGIN TRANSLATION (chksum(pcal) = "39f153db" /\ chksum(tla) = "7c2efc94")
+\* Label Start of procedure memory_load at line 154 col 1 changed to Start_
+\* Label Start of procedure memory_store at line 179 col 1 changed to Start_m
+\* Label Start of procedure tlb_init at line 201 col 5 changed to Start_t
+\* Label Loop of procedure tlb_type at line 252 col 5 changed to Loop_
+\* Label Inc of procedure tlb_type at line 258 col 9 changed to Inc_
+\* Label Loop of procedure tlb_lookup at line 269 col 5 changed to Loop_t
+\* Label Start of procedure x_memory_load at line 289 col 5 changed to Start_x
+\* Label Start of procedure x_memory_store at line 296 col 5 changed to Start_x_
+\* Label Start of procedure cpu_read at line 305 col 5 changed to Start_c
+\* Label Return of procedure cpu_read at line 307 col 5 changed to Return_
+\* Label End of procedure cpu_read at line 317 col 5 changed to End_
+\* Label Start of procedure cpu_write at line 323 col 5 changed to Start_cp
+\* Label Return of procedure cpu_write at line 325 col 5 changed to Return_c
+\* Label End of procedure cpu_write at line 334 col 5 changed to End_c
+\* Label Start of procedure cpu_execute at line 341 col 5 changed to Start_cpu
+\* Label Return of procedure cpu_execute at line 343 col 5 changed to Return_cp
+\* Label End of procedure cpu_execute at line 358 col 5 changed to End_cp
+\* Label Start of procedure Cpu_process at line 373 col 5 changed to Start_C
+\* Label Call of procedure Cpu_process at line 379 col 9 changed to Call_
+\* Label Start of procedure Legacy_code at line 399 col 5 changed to Start_L
+\* Label Start of procedure Uobjcollection_code at line 452 col 5 changed to Start_U
+\* Label Start of procedure Uobject_code at line 472 col 5 changed to Start_Uo
+\* Label End of procedure Uobject_code at line 508 col 5 changed to End_U
+\* Label A of process one at line 527 col 5 changed to A_
+\* Procedure variable status of procedure cpu_read at line 302 col 15 changed to status_
+\* Procedure variable paddr of procedure cpu_read at line 302 col 23 changed to paddr_
+\* Procedure variable collection of procedure Cpu_process at line 370 col 15 changed to collection_
+\* Parameter p of procedure memory_load at line 152 col 23 changed to p_
+\* Parameter c of procedure memory_load at line 152 col 26 changed to c_
+\* Parameter o of procedure memory_load at line 152 col 29 changed to o_
+\* Parameter l of procedure memory_load at line 152 col 32 changed to l_
+\* Parameter p of procedure memory_store at line 177 col 24 changed to p_m
+\* Parameter c of procedure memory_store at line 177 col 27 changed to c_m
+\* Parameter o of procedure memory_store at line 177 col 30 changed to o_m
+\* Parameter val of procedure memory_store at line 177 col 36 changed to val_
+\* Parameter addr of procedure tlb_type at line 248 col 20 changed to addr_
+\* Parameter addr of procedure tlb_lookup at line 265 col 22 changed to addr_t
+\* Parameter addr of procedure x_memory_load at line 287 col 25 changed to addr_x
+\* Parameter addr of procedure x_memory_store at line 294 col 26 changed to addr_x_
+\* Parameter addr of procedure cpu_read at line 301 col 20 changed to addr_c
+\* Parameter level of procedure cpu_read at line 301 col 26 changed to level_
+\* Parameter addr of procedure cpu_write at line 321 col 21 changed to addr_cp
+\* Parameter level of procedure cpu_write at line 321 col 27 changed to level_c
+\* Parameter p of procedure Cpu_process at line 369 col 23 changed to p_C
+\* Parameter p of procedure Legacy_code at line 395 col 23 changed to p_L
+\* Parameter saved_pc of procedure Legacy_code at line 395 col 26 changed to saved_pc_
+\* Parameter p of procedure Uobjcollection_code at line 450 col 31 changed to p_U
+\* Parameter c of procedure Uobjcollection_code at line 450 col 34 changed to c_U
+\* Parameter saved_pc of procedure Uobjcollection_code at line 450 col 37 changed to saved_pc_U
+\* Parameter p of procedure Uobject_code at line 467 col 24 changed to p_Uo
+\* Parameter saved_pc of procedure Uobject_code at line 467 col 33 changed to saved_pc_Uo
 CONSTANT defaultInitValue
 VARIABLES Cpu, memory, call_stack, memory_load_return, x_memory_load_return, 
           tlb, tlb_type_return, tlb_lookup_return, memory_paddr, pc, stack, 
@@ -617,6 +618,7 @@ Init == (* Global variables *)
                    [Id |-> cp,
                     Pc |-> [x \in 1..2 |-> 0],
                     Pr |-> 0,
+                    sp |-> 0,
                     Collection |-> 0,
                     Object |-> 0,
                     Shared_cpustate |-> 0,
